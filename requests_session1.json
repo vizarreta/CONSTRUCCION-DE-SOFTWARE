@@ -1,0 +1,41 @@
+{
+	"info": {
+		"name": "Flask_Sesion_1",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Tasks",
+			"item": [
+				{ "name": "Listar Tareas", "request": { "method": "GET", "url": "http://127.0.0.1:5000/tasks" } },
+				{
+					"name": "Crear Tarea",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "raw": "{\"content\": \"Nueva Tarea de Prueba\", \"done\": false}" },
+						"url": "http://127.0.0.1:5000/tasks"
+					}
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{ "name": "Listar Usuarios", "request": { "method": "GET", "url": "http://127.0.0.1:5000/users" } },
+				{
+					"name": "Crear Usuario",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Vicente\",\n    \"lastname\": \"Machaca\",\n    \"address\": {\n        \"city\": \"Aqp\",\n        \"country\": \"Perú\",\n        \"code\": \"04000\"\n    }\n}"
+						},
+						"url": "http://127.0.0.1:5000/users"
+					}
+				}
+			]
+		}
+	]
+}
