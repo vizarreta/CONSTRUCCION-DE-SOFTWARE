@@ -1,0 +1,375 @@
+﻿id_persona,cluster,es_anomalia,trastorno_sueno,distancia_propio_cluster,cluster_mas_cercano,distancia_cluster_mas_cercano
+1,-1,True,Ninguno,3.1727,5,3.1727
+2,-1,True,Ninguno,3.7319,1,3.7319
+3,-1,True,Ninguno,3.7319,1,3.7319
+4,-1,True,Apnea del sueño,6.3738,5,6.3738
+5,-1,True,Apnea del sueño,6.3738,5,6.3738
+6,-1,True,Insomnio,6.3738,5,6.3738
+7,-1,True,Insomnio,4.1128,5,4.1128
+8,0,False,Ninguno,0.2418,4,3.6993
+9,0,False,Ninguno,0.2418,4,3.6993
+10,0,False,Ninguno,0.2418,4,3.6993
+11,-1,True,Ninguno,2.0657,1,2.0657
+12,0,False,Ninguno,0.2418,4,3.6993
+13,-1,True,Ninguno,2.0657,1,2.0657
+14,-1,True,Ninguno,2.0688,1,2.0688
+15,-1,True,Ninguno,2.0688,1,2.0688
+16,-1,True,Ninguno,2.0688,1,2.0688
+17,-1,True,Apnea del sueño,4.729,1,4.729
+18,-1,True,Apnea del sueño,2.0688,1,2.0688
+19,-1,True,Insomnio,4.729,1,4.729
+20,0,False,Ninguno,0.3762,4,3.5735
+21,0,False,Ninguno,0.1168,4,3.6028
+22,0,False,Ninguno,0.1168,4,3.6028
+23,0,False,Ninguno,0.1168,4,3.6028
+24,0,False,Ninguno,0.1168,4,3.6028
+25,0,False,Ninguno,0.1783,4,3.6531
+26,0,False,Ninguno,0.4444,4,3.7215
+27,0,False,Ninguno,0.1783,4,3.6531
+28,0,False,Ninguno,0.4444,4,3.7215
+29,0,False,Ninguno,0.4444,4,3.7215
+30,0,False,Ninguno,0.4444,4,3.7215
+31,-1,True,Apnea del sueño,4.3153,1,4.3153
+32,-1,True,Insomnio,4.3153,1,4.3153
+33,-1,True,Ninguno,2.5721,2,2.5721
+34,1,False,Ninguno,0.2097,5,3.0202
+35,0,False,Ninguno,0.1168,4,3.5591
+36,1,False,Ninguno,0.2097,5,3.0202
+37,1,False,Ninguno,0.2097,5,3.0202
+38,0,False,Ninguno,0.3762,4,3.5294
+39,0,False,Ninguno,0.3762,4,3.5294
+40,0,False,Ninguno,0.3762,4,3.5294
+41,0,False,Ninguno,0.1168,4,3.5591
+42,0,False,Ninguno,0.1168,4,3.5591
+43,0,False,Ninguno,0.1168,4,3.5591
+44,0,False,Ninguno,0.1783,4,3.6101
+45,0,False,Ninguno,0.1168,4,3.5591
+46,0,False,Ninguno,0.1783,4,3.6101
+47,0,False,Ninguno,0.1168,4,3.5591
+48,0,False,Ninguno,0.1783,4,3.6101
+49,0,False,Ninguno,0.1168,4,3.5591
+50,0,False,Apnea del sueño,0.1168,4,3.5591
+51,-1,True,Ninguno,3.0175,2,3.0175
+52,-1,True,Ninguno,3.0175,2,3.0175
+53,1,False,Ninguno,0.1874,5,3.0643
+54,0,False,Ninguno,0.4101,4,3.4887
+55,1,False,Ninguno,0.1874,5,3.0643
+56,1,False,Ninguno,0.1874,5,3.0643
+57,0,False,Ninguno,0.2008,4,3.5187
+58,1,False,Ninguno,0.1874,5,3.0643
+59,1,False,Ninguno,0.1874,5,3.0643
+60,0,False,Ninguno,0.2008,4,3.5187
+61,1,False,Ninguno,0.1874,5,3.0643
+62,1,False,Ninguno,0.1874,5,3.0643
+63,1,False,Ninguno,0.398,5,2.9164
+64,1,False,Ninguno,0.398,5,2.9164
+65,1,False,Ninguno,0.398,5,2.9164
+66,1,False,Ninguno,0.398,5,2.9164
+67,-1,True,Ninguno,2.6397,3,2.6397
+68,1,False,Insomnio,0.1997,5,3.016
+69,-1,True,Ninguno,3.0826,5,3.0826
+70,-1,True,Ninguno,3.0826,5,3.0826
+71,1,False,Ninguno,0.164,5,2.9166
+72,1,False,Ninguno,0.164,5,2.9166
+73,1,False,Ninguno,0.164,5,2.9166
+74,1,False,Ninguno,0.164,5,2.9166
+75,1,False,Ninguno,0.1997,5,3.016
+76,1,False,Ninguno,0.1997,5,3.016
+77,1,False,Ninguno,0.1997,5,3.016
+78,1,False,Ninguno,0.1997,5,3.016
+79,1,False,Ninguno,0.1997,5,3.016
+80,1,False,Ninguno,0.1997,5,3.016
+81,-1,True,Apnea del sueño,5.3218,5,5.3218
+82,-1,True,Apnea del sueño,5.3218,5,5.3218
+83,-1,True,Ninguno,3.0837,5,3.0837
+84,-1,True,Ninguno,3.0837,5,3.0837
+85,-1,True,Ninguno,1.8114,3,1.8114
+86,2,False,Ninguno,0.2487,3,3.689
+87,-1,True,Ninguno,2.807,3,2.807
+88,-1,True,Ninguno,2.807,3,2.807
+89,-1,True,Ninguno,2.8014,3,2.8014
+90,-1,True,Ninguno,2.8014,3,2.8014
+91,-1,True,Ninguno,2.8014,3,2.8014
+92,-1,True,Ninguno,2.8014,3,2.8014
+93,-1,True,Ninguno,1.8114,3,1.8114
+94,-1,True,Apnea del sueño,5.3321,5,5.3321
+95,2,False,Insomnio,0.1587,3,3.6788
+96,2,False,Ninguno,0.2277,3,3.7078
+97,2,False,Ninguno,0.1587,3,3.6788
+98,2,False,Ninguno,0.2277,3,3.7078
+99,2,False,Ninguno,0.2277,3,3.7078
+100,2,False,Ninguno,0.2277,3,3.7078
+101,2,False,Ninguno,0.1587,3,3.6788
+102,2,False,Ninguno,0.1587,3,3.6788
+103,2,False,Ninguno,0.1587,3,3.6788
+104,-1,True,Apnea del sueño,3.1904,5,3.1904
+105,2,False,Apnea del sueño,0.1587,3,3.6788
+106,-1,True,Insomnio,3.1904,5,3.1904
+107,-1,True,Ninguno,3.3155,5,3.3155
+108,-1,True,Ninguno,2.7939,4,2.7939
+109,-1,True,Ninguno,2.7939,4,2.7939
+110,3,False,Ninguno,0.5178,4,2.4397
+111,2,False,Ninguno,0.1233,3,3.6722
+112,3,False,Ninguno,0.5178,4,2.4397
+113,2,False,Ninguno,0.1233,3,3.6722
+114,3,False,Ninguno,0.5178,4,2.4397
+115,2,False,Ninguno,0.1233,3,3.6722
+116,2,False,Ninguno,0.1233,3,3.6722
+117,2,False,Ninguno,0.1233,3,3.6722
+118,2,False,Ninguno,0.1233,3,3.6722
+119,2,False,Ninguno,0.1233,3,3.6722
+120,2,False,Ninguno,0.1233,3,3.6722
+121,2,False,Ninguno,0.1233,3,3.6722
+122,2,False,Ninguno,0.1233,3,3.6722
+123,2,False,Ninguno,0.1233,3,3.6722
+124,2,False,Ninguno,0.1233,3,3.6722
+125,2,False,Ninguno,0.1233,3,3.6722
+126,-1,True,Ninguno,1.6183,2,1.6183
+127,3,False,Ninguno,0.174,4,2.5802
+128,2,False,Ninguno,0.2419,3,3.6983
+129,3,False,Ninguno,0.174,4,2.5802
+130,3,False,Ninguno,0.174,4,2.5802
+131,2,False,Ninguno,0.2419,3,3.6983
+132,3,False,Ninguno,0.174,4,2.5802
+133,3,False,Ninguno,0.174,4,2.5802
+134,2,False,Ninguno,0.2419,3,3.6983
+135,3,False,Ninguno,0.174,4,2.5802
+136,3,False,Ninguno,0.174,4,2.5802
+137,2,False,Ninguno,0.2419,3,3.6983
+138,3,False,Ninguno,0.418,4,2.9503
+139,2,False,Ninguno,0.2419,3,3.6983
+140,3,False,Ninguno,0.418,4,2.9503
+141,2,False,Ninguno,0.2419,3,3.6983
+142,3,False,Ninguno,0.418,4,2.9503
+143,2,False,Ninguno,0.2419,3,3.6983
+144,2,False,Ninguno,0.2419,3,3.6983
+145,3,False,Apnea del sueño,0.418,4,2.9503
+146,-1,True,Apnea del sueño,5.6453,5,5.6453
+147,3,False,Insomnio,0.1217,4,2.7199
+148,-1,True,Insomnio,3.671,5,3.671
+149,-1,True,Ninguno,3.6977,5,3.6977
+150,-1,True,Ninguno,3.1567,2,3.1567
+151,-1,True,Ninguno,3.1567,2,3.1567
+152,3,False,Ninguno,0.1217,4,2.7199
+153,3,False,Ninguno,0.1217,4,2.7199
+154,3,False,Ninguno,0.1217,4,2.7199
+155,3,False,Ninguno,0.1217,4,2.7199
+156,3,False,Ninguno,0.1217,4,2.7199
+157,3,False,Ninguno,0.1217,4,2.7199
+158,3,False,Ninguno,0.1217,4,2.7199
+159,3,False,Ninguno,0.1217,4,2.7199
+160,3,False,Ninguno,0.1217,4,2.7199
+161,3,False,Ninguno,0.1217,4,2.7199
+162,-1,True,Ninguno,2.858,2,2.858
+163,-1,True,Ninguno,2.858,2,2.858
+164,-1,True,Ninguno,0.7332,4,0.7332
+165,-1,True,Ninguno,0.7332,4,0.7332
+166,4,False,Insomnio,0.4079,3,2.4234
+167,-1,True,Ninguno,2.4913,3,2.4913
+168,-1,True,Ninguno,2.7224,5,2.7224
+169,-1,True,Ninguno,2.7224,5,2.7224
+170,4,False,Ninguno,0.1812,3,2.5821
+171,4,False,Ninguno,0.1812,3,2.5821
+172,4,False,Ninguno,0.1812,3,2.5821
+173,4,False,Ninguno,0.1812,3,2.5821
+174,4,False,Ninguno,0.1812,3,2.5821
+175,4,False,Ninguno,0.4079,3,2.4234
+176,4,False,Ninguno,0.4079,3,2.4234
+177,4,False,Ninguno,0.4079,3,2.4234
+178,5,False,Insomnio,0.3382,1,3.0205
+179,4,False,Ninguno,0.1587,3,2.7734
+180,4,False,Ninguno,0.1587,3,2.7734
+181,4,False,Ninguno,0.1587,3,2.7734
+182,4,False,Ninguno,0.1587,3,2.7734
+183,4,False,Ninguno,0.1587,3,2.7734
+184,4,False,Ninguno,0.1587,3,2.7734
+185,-1,True,Apnea del sueño,2.7928,5,2.7928
+186,-1,True,Apnea del sueño,2.7928,5,2.7928
+187,6,False,Insomnio,0.4153,3,4.5486
+188,5,False,Insomnio,0.298,1,2.887
+189,6,False,Insomnio,0.4153,3,4.5486
+190,5,False,Insomnio,0.2948,1,3.0651
+191,6,False,Insomnio,0.4153,3,4.5486
+192,5,False,Insomnio,0.0794,1,2.9517
+193,5,False,Insomnio,0.2948,1,3.0651
+194,5,False,Insomnio,0.2948,1,3.0651
+195,5,False,Insomnio,0.2948,1,3.0651
+196,5,False,Insomnio,0.2948,1,3.0651
+197,5,False,Insomnio,0.2948,1,3.0651
+198,5,False,Insomnio,0.2948,1,3.0651
+199,5,False,Insomnio,0.2948,1,3.0651
+200,5,False,Insomnio,0.2948,1,3.0651
+201,5,False,Insomnio,0.2948,1,3.0651
+202,4,False,Insomnio,0.1802,3,2.7934
+203,4,False,Insomnio,0.1802,3,2.7934
+204,-1,True,Ninguno,3.3217,5,3.3217
+205,-1,True,Ninguno,3.1498,4,3.1498
+206,4,False,Ninguno,0.1441,3,2.6198
+207,4,False,Ninguno,0.1441,3,2.6198
+208,4,False,Ninguno,0.1441,3,2.6198
+209,4,False,Ninguno,0.1441,3,2.6198
+210,4,False,Ninguno,0.1802,3,2.7934
+211,4,False,Ninguno,0.1441,3,2.6198
+212,4,False,Ninguno,0.1802,3,2.7934
+213,4,False,Ninguno,0.1802,3,2.7934
+214,4,False,Ninguno,0.1802,3,2.7934
+215,4,False,Ninguno,0.1802,3,2.7934
+216,4,False,Ninguno,0.1802,3,2.7934
+217,4,False,Ninguno,0.1802,3,2.7934
+218,4,False,Ninguno,0.1802,3,2.7934
+219,4,False,Apnea del sueño,0.1802,3,2.7934
+220,5,False,Apnea del sueño,0.2948,1,3.0651
+221,6,False,Insomnio,0.074,3,4.6105
+222,5,False,Insomnio,0.074,1,3.0017
+223,5,False,Insomnio,0.2966,1,2.9381
+224,5,False,Insomnio,0.074,1,3.0017
+225,6,False,Insomnio,0.074,3,4.6105
+226,5,False,Insomnio,0.2966,1,2.9381
+227,6,False,Insomnio,0.074,3,4.6105
+228,5,False,Insomnio,0.2966,1,2.9381
+229,6,False,Insomnio,0.074,3,4.6105
+230,5,False,Insomnio,0.2966,1,2.9381
+231,6,False,Insomnio,0.074,3,4.6105
+232,5,False,Insomnio,0.2966,1,2.9381
+233,6,False,Insomnio,0.074,3,4.6105
+234,5,False,Insomnio,0.2966,1,2.9381
+235,6,False,Insomnio,0.074,3,4.6105
+236,5,False,Insomnio,0.2966,1,2.9381
+237,5,False,Insomnio,0.074,1,3.0017
+238,6,False,Insomnio,0.2596,3,4.6781
+239,5,False,Insomnio,0.2966,1,2.9381
+240,5,False,Insomnio,0.074,1,3.0017
+241,6,False,Insomnio,0.2596,3,4.6781
+242,5,False,Insomnio,0.2966,1,2.9381
+243,5,False,Insomnio,0.074,1,3.0017
+244,6,False,Insomnio,0.2596,3,4.6781
+245,5,False,Insomnio,0.2966,1,2.9381
+246,6,False,Insomnio,0.2596,3,4.6781
+247,5,False,Insomnio,0.2966,1,2.9381
+248,-1,True,Insomnio,2.3362,5,2.3362
+249,5,False,Ninguno,0.074,1,3.0017
+250,5,False,Ninguno,0.2934,1,3.1133
+251,-1,True,Insomnio,2.6529,6,2.6529
+252,-1,True,Insomnio,2.6529,6,2.6529
+253,6,False,Insomnio,0.2687,3,4.6957
+254,6,False,Insomnio,0.2687,3,4.6957
+255,6,False,Insomnio,0.2687,3,4.6957
+256,6,False,Insomnio,0.2687,3,4.6957
+257,6,False,Insomnio,0.1013,3,4.6283
+258,6,False,Insomnio,0.1013,3,4.6283
+259,6,False,Insomnio,0.1013,3,4.6283
+260,6,False,Insomnio,0.1013,3,4.6283
+261,6,False,Insomnio,0.1013,3,4.6283
+262,6,False,Ninguno,0.1013,3,4.6283
+263,6,False,Ninguno,0.1013,3,4.6283
+264,-1,True,Ninguno,3.6618,6,3.6618
+265,-1,True,Insomnio,5.3793,5,5.3793
+266,7,False,Apnea del sueño,0.5741,5,4.9753
+267,-1,True,Insomnio,5.3793,5,5.3793
+268,7,False,Ninguno,0.392,5,4.8768
+269,7,False,Apnea del sueño,0.2248,5,4.9269
+270,7,False,Apnea del sueño,0.1512,5,4.8866
+271,7,False,Apnea del sueño,0.1512,5,4.8866
+272,7,False,Apnea del sueño,0.1512,5,4.8866
+273,7,False,Apnea del sueño,0.1512,5,4.8866
+274,7,False,Apnea del sueño,0.392,5,4.8768
+275,7,False,Apnea del sueño,0.392,5,4.8768
+276,7,False,Apnea del sueño,0.392,5,4.8768
+277,-1,True,Apnea del sueño,5.7044,9,5.7044
+278,-1,True,Apnea del sueño,5.7044,9,5.7044
+279,7,False,Insomnio,0.1272,5,4.9029
+280,8,False,Ninguno,0.4311,2,4.3882
+281,7,False,Ninguno,0.2094,5,4.943
+282,7,False,Apnea del sueño,0.1272,5,4.9029
+283,7,False,Apnea del sueño,0.2094,5,4.943
+284,7,False,Apnea del sueño,0.2094,5,4.943
+285,7,False,Apnea del sueño,0.2094,5,4.943
+286,7,False,Apnea del sueño,0.2094,5,4.943
+287,7,False,Apnea del sueño,0.2094,5,4.943
+288,7,False,Apnea del sueño,0.2094,5,4.943
+289,7,False,Apnea del sueño,0.2094,5,4.943
+290,7,False,Apnea del sueño,0.1272,5,4.9029
+291,7,False,Apnea del sueño,0.2094,5,4.943
+292,7,False,Apnea del sueño,0.1272,5,4.9029
+293,7,False,Apnea del sueño,0.1272,5,4.9029
+294,7,False,Apnea del sueño,0.2094,5,4.943
+295,7,False,Apnea del sueño,0.1272,5,4.9029
+296,7,False,Apnea del sueño,0.2094,5,4.943
+297,7,False,Apnea del sueño,0.1272,5,4.9029
+298,7,False,Apnea del sueño,0.1272,5,4.9029
+299,8,False,Ninguno,0.2687,2,4.6523
+300,8,False,Ninguno,0.2687,2,4.6523
+301,8,False,Ninguno,0.2687,2,4.6523
+302,8,False,Ninguno,0.2687,2,4.6523
+303,-1,True,Ninguno,3.9234,5,3.9234
+304,7,False,Apnea del sueño,0.2527,5,4.9617
+305,7,False,Apnea del sueño,0.1902,5,4.9218
+306,7,False,Apnea del sueño,0.1902,5,4.9218
+307,-1,True,Insomnio,2.931,5,2.931
+308,-1,True,Insomnio,2.931,5,2.931
+309,-1,True,Insomnio,2.8417,5,2.8417
+310,-1,True,Insomnio,2.8417,5,2.8417
+311,-1,True,Insomnio,2.8417,5,2.8417
+312,-1,True,Insomnio,2.8417,5,2.8417
+313,8,False,Ninguno,0.1072,2,4.5788
+314,8,False,Ninguno,0.1072,2,4.5788
+315,8,False,Ninguno,0.1072,2,4.5788
+316,8,False,Insomnio,0.2888,2,4.5195
+317,8,False,Ninguno,0.1748,2,4.7382
+318,8,False,Ninguno,0.1748,2,4.7382
+319,8,False,Ninguno,0.0632,2,4.6241
+320,8,False,Ninguno,0.0632,2,4.6241
+321,8,False,Ninguno,0.1748,2,4.7382
+322,8,False,Ninguno,0.0632,2,4.6241
+323,8,False,Ninguno,0.0632,2,4.6241
+324,8,False,Ninguno,0.1748,2,4.7382
+325,8,False,Ninguno,0.2888,2,4.5195
+326,8,False,Ninguno,0.1748,2,4.7382
+327,8,False,Ninguno,0.2888,2,4.5195
+328,8,False,Ninguno,0.1748,2,4.7382
+329,8,False,Ninguno,0.2888,2,4.5195
+330,8,False,Ninguno,0.1748,2,4.7382
+331,8,False,Ninguno,0.1748,2,4.7382
+332,8,False,Ninguno,0.0632,2,4.6241
+333,8,False,Ninguno,0.1522,2,4.6718
+334,8,False,Ninguno,0.1522,2,4.6718
+335,8,False,Ninguno,0.1522,2,4.6718
+336,8,False,Ninguno,0.1522,2,4.6718
+337,8,False,Ninguno,0.1522,2,4.6718
+338,8,False,Ninguno,0.1522,2,4.6718
+339,8,False,Ninguno,0.223,2,4.7847
+340,-1,True,Apnea del sueño,2.0955,9,2.0955
+341,-1,True,Apnea del sueño,2.0955,9,2.0955
+342,-1,True,Ninguno,4.7903,2,4.7903
+343,-1,True,Ninguno,4.7903,2,4.7903
+344,9,False,Ninguno,0.1423,8,5.0301
+345,9,False,Apnea del sueño,0.2837,8,5.0191
+346,9,False,Apnea del sueño,0.2837,8,5.0191
+347,9,False,Apnea del sueño,0.2837,8,5.0191
+348,9,False,Apnea del sueño,0.2837,8,5.0191
+349,9,False,Apnea del sueño,0.2837,8,5.0191
+350,9,False,Apnea del sueño,0.1423,8,5.0301
+351,9,False,Apnea del sueño,0.1423,8,5.0301
+352,9,False,Apnea del sueño,0.1423,8,5.0301
+353,9,False,Apnea del sueño,0.2173,8,5.064
+354,9,False,Apnea del sueño,0.2173,8,5.064
+355,9,False,Apnea del sueño,0.2173,8,5.064
+356,9,False,Apnea del sueño,0.2173,8,5.064
+357,9,False,Apnea del sueño,0.2173,8,5.064
+358,9,False,Apnea del sueño,0.2173,8,5.064
+359,9,False,Ninguno,0.2335,8,5.0791
+360,9,False,Ninguno,0.0906,8,5.0577
+361,9,False,Apnea del sueño,0.2616,8,5.0467
+362,9,False,Apnea del sueño,0.2616,8,5.0467
+363,9,False,Apnea del sueño,0.2616,8,5.0467
+364,9,False,Apnea del sueño,0.2616,8,5.0467
+365,9,False,Apnea del sueño,0.2335,8,5.0791
+366,9,False,Apnea del sueño,0.2335,8,5.0791
+367,9,False,Apnea del sueño,0.0906,8,5.0577
+368,9,False,Apnea del sueño,0.2335,8,5.0791
+369,9,False,Apnea del sueño,0.0906,8,5.0577
+370,9,False,Apnea del sueño,0.0906,8,5.0577
+371,9,False,Apnea del sueño,0.2335,8,5.0791
+372,9,False,Apnea del sueño,0.0906,8,5.0577
+373,9,False,Apnea del sueño,0.0906,8,5.0577
+374,9,False,Apnea del sueño,0.0906,8,5.0577

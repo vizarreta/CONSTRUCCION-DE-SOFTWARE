@@ -1,0 +1,232 @@
+{
+  "filas": 374,
+  "columnas_originales": 13,
+  "columnas_transformadas": 80,
+  "faltantes_antes": {
+    "id_persona": 0,
+    "genero": 0,
+    "edad": 0,
+    "ocupacion": 0,
+    "duracion_sueno_horas": 0,
+    "calidad_sueno": 0,
+    "nivel_actividad_fisica": 0,
+    "nivel_estres": 0,
+    "categoria_imc": 0,
+    "presion_arterial": 0,
+    "frecuencia_cardiaca": 0,
+    "pasos_diarios": 0,
+    "trastorno_sueno": 0
+  },
+  "faltantes_despues": {
+    "id_persona": 0,
+    "genero": 0,
+    "edad": 0,
+    "ocupacion": 0,
+    "duracion_sueno_horas": 0,
+    "calidad_sueno": 0,
+    "nivel_actividad_fisica": 0,
+    "nivel_estres": 0,
+    "categoria_imc": 0,
+    "presion_arterial": 0,
+    "frecuencia_cardiaca": 0,
+    "pasos_diarios": 0,
+    "trastorno_sueno": 0
+  },
+  "anomalias_iqr": {
+    "edad": {
+      "q1": 35.25,
+      "q3": 50.0,
+      "iqr": 14.75,
+      "limite_inferior": 13.125,
+      "limite_superior": 72.125,
+      "anomalias": 0
+    },
+    "duracion_sueno_horas": {
+      "q1": 6.4,
+      "q3": 7.8,
+      "iqr": 1.4,
+      "limite_inferior": 4.3,
+      "limite_superior": 9.9,
+      "anomalias": 0
+    },
+    "calidad_sueno": {
+      "q1": 6.0,
+      "q3": 8.0,
+      "iqr": 2.0,
+      "limite_inferior": 3.0,
+      "limite_superior": 11.0,
+      "anomalias": 0
+    },
+    "nivel_actividad_fisica": {
+      "q1": 45.0,
+      "q3": 75.0,
+      "iqr": 30.0,
+      "limite_inferior": 0.0,
+      "limite_superior": 120.0,
+      "anomalias": 0
+    },
+    "nivel_estres": {
+      "q1": 4.0,
+      "q3": 7.0,
+      "iqr": 3.0,
+      "limite_inferior": -0.5,
+      "limite_superior": 11.5,
+      "anomalias": 0
+    },
+    "frecuencia_cardiaca": {
+      "q1": 68.0,
+      "q3": 72.0,
+      "iqr": 4.0,
+      "limite_inferior": 62.0,
+      "limite_superior": 78.0,
+      "anomalias": 15
+    },
+    "pasos_diarios": {
+      "q1": 5600.0,
+      "q3": 8000.0,
+      "iqr": 2400.0,
+      "limite_inferior": 2000.0,
+      "limite_superior": 11600.0,
+      "anomalias": 0
+    },
+    "presion_sistolica": {
+      "q1": 125.0,
+      "q3": 135.0,
+      "iqr": 10.0,
+      "limite_inferior": 110.0,
+      "limite_superior": 150.0,
+      "anomalias": 0
+    },
+    "presion_diastolica": {
+      "q1": 80.0,
+      "q3": 90.0,
+      "iqr": 10.0,
+      "limite_inferior": 65.0,
+      "limite_superior": 105.0,
+      "anomalias": 0
+    },
+    "presion_arterial_media": {
+      "q1": 95.0,
+      "q3": 105.0,
+      "iqr": 10.0,
+      "limite_inferior": 80.0,
+      "limite_superior": 120.0,
+      "anomalias": 0
+    },
+    "deficit_sueno": {
+      "q1": 0.2,
+      "q3": 1.6,
+      "iqr": 1.4,
+      "limite_inferior": -1.9,
+      "limite_superior": 3.7,
+      "anomalias": 0
+    },
+    "eficiencia_sueno": {
+      "q1": 0.97,
+      "q3": 1.1,
+      "iqr": 0.13,
+      "limite_inferior": 0.775,
+      "limite_superior": 1.295,
+      "anomalias": 10
+    },
+    "interaccion_sueno_estres": {
+      "q1": 26.8,
+      "q3": 46.2,
+      "iqr": 19.4,
+      "limite_inferior": -2.3,
+      "limite_superior": 75.3,
+      "anomalias": 0
+    },
+    "interaccion_sueno_actividad": {
+      "q1": 284.625,
+      "q3": 577.5,
+      "iqr": 292.875,
+      "limite_inferior": -154.6875,
+      "limite_superior": 1016.8125,
+      "anomalias": 0
+    },
+    "calidad_por_estres": {
+      "q1": 0.75,
+      "q3": 1.6,
+      "iqr": 0.85,
+      "limite_inferior": -0.525,
+      "limite_superior": 2.875,
+      "anomalias": 0
+    },
+    "duracion_sueno_cuadrado": {
+      "q1": 40.96,
+      "q3": 60.84,
+      "iqr": 19.88,
+      "limite_inferior": 11.14,
+      "limite_superior": 90.66,
+      "anomalias": 0
+    },
+    "puntaje_salud_sueno": {
+      "q1": 5.7,
+      "q3": 7.7,
+      "iqr": 2.0,
+      "limite_inferior": 2.7,
+      "limite_superior": 10.7,
+      "anomalias": 0
+    }
+  },
+  "registros_con_alguna_anomalia": 17,
+  "duplicados_sin_id": 242,
+  "vector_caracteristicas": [
+    "edad_norm",
+    "duracion_sueno_horas_norm",
+    "calidad_sueno_norm",
+    "nivel_actividad_fisica_norm",
+    "nivel_estres_norm",
+    "frecuencia_cardiaca_norm",
+    "pasos_diarios_norm",
+    "presion_arterial_media_norm",
+    "genero_binario_mujer",
+    "categoria_imc_ordinal_norm",
+    "eficiencia_sueno_norm",
+    "ocupacion_Abogado/a",
+    "ocupacion_Contador/a",
+    "ocupacion_Docente",
+    "ocupacion_Doctor/a",
+    "ocupacion_Enfermero/a",
+    "ocupacion_Ingeniero/a",
+    "ocupacion_Otros",
+    "ocupacion_Vendedor/a"
+  ],
+  "embedding": {
+    "archivo_vector": "vector_caracteristicas_sleep.csv",
+    "archivo_embedding": "embedding_sleep_2d.csv",
+    "columnas_vector": 19,
+    "columnas_usadas_en_pca": 11,
+    "columnas_excluidas_del_pca": [
+      "ocupacion_Abogado/a",
+      "ocupacion_Contador/a",
+      "ocupacion_Docente",
+      "ocupacion_Doctor/a",
+      "ocupacion_Enfermero/a",
+      "ocupacion_Ingeniero/a",
+      "ocupacion_Otros",
+      "ocupacion_Vendedor/a"
+    ],
+    "varianza_explicada_embedding_1": 0.3848,
+    "varianza_explicada_embedding_2": 0.2472,
+    "varianza_explicada_total_2d": 0.632,
+    "grafico_embedding_generado": true
+  },
+  "faltantes_dataset_original": {
+    "id_persona": 0,
+    "genero": 0,
+    "edad": 0,
+    "ocupacion": 0,
+    "duracion_sueno_horas": 0,
+    "calidad_sueno": 0,
+    "nivel_actividad_fisica": 0,
+    "nivel_estres": 0,
+    "categoria_imc": 0,
+    "presion_arterial": 0,
+    "frecuencia_cardiaca": 0,
+    "pasos_diarios": 0,
+    "trastorno_sueno": 219
+  },
+  "boxplot_generado": true
+}

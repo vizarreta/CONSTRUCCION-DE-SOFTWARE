@@ -1,0 +1,90 @@
+ * Serving Flask app 'app'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:5000
+Press CTRL+C to quit
+127.0.0.1 - - [30/Jun/2026 17:00:40] "GET /api/data HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\flask\app.py", line 1478, in __call__
+    return self.wsgi_app(environ, start_response)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\flask\app.py", line 1458, in wsgi_app
+    response = self.handle_exception(e)
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\flask_cors\extension.py", line 176, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ~^^^^^^^^^^^^^^^^^
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\flask\app.py", line 1455, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\flask\app.py", line 869, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\flask_cors\extension.py", line 176, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ~^^^^^^^^^^^^^^^^^
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\flask\app.py", line 867, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\flask\app.py", line 852, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\caerp\Downloads\git hub\DASHBOARD-\dashboarfinal\backend\app.py", line 128, in api_data
+    df, X, feature_cols = cargar_datos()
+                          ~~~~~~~~~~~~^^
+  File "C:\Users\caerp\Downloads\git hub\DASHBOARD-\dashboarfinal\backend\app.py", line 76, in cargar_datos
+    df_vector = pd.read_csv(VECTOR_PATH, encoding="utf-8-sig")
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\pandas\io\parsers\readers.py", line 1026, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\pandas\io\parsers\readers.py", line 620, in _read
+    parser = TextFileReader(filepath_or_buffer, **kwds)
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\pandas\io\parsers\readers.py", line 1620, in __init__
+    self._engine = self._make_engine(f, self.engine)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\pandas\io\parsers\readers.py", line 1880, in _make_engine
+    self.handles = get_handle(
+    
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\pandas\io\common.py", line 873, in get_handle
+    handle = open(
+    
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\caerp\\Downloads\\git hub\\DASHBOARD-\\dashboarfinal\\data\\vector_caracteristicas_sleep.csv'
+127.0.0.1 - - [30/Jun/2026 17:00:41] "GET /api/data HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\flask\app.py", line 1478, in __call__
+    return self.wsgi_app(environ, start_response)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\flask\app.py", line 1458, in wsgi_app
+    response = self.handle_exception(e)
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\flask_cors\extension.py", line 176, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ~^^^^^^^^^^^^^^^^^
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\flask\app.py", line 1455, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\flask\app.py", line 869, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\flask_cors\extension.py", line 176, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ~^^^^^^^^^^^^^^^^^
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\flask\app.py", line 867, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\flask\app.py", line 852, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\caerp\Downloads\git hub\DASHBOARD-\dashboarfinal\backend\app.py", line 128, in api_data
+    df, X, feature_cols = cargar_datos()
+                          ~~~~~~~~~~~~^^
+  File "C:\Users\caerp\Downloads\git hub\DASHBOARD-\dashboarfinal\backend\app.py", line 76, in cargar_datos
+    df_vector = pd.read_csv(VECTOR_PATH, encoding="utf-8-sig")
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\pandas\io\parsers\readers.py", line 1026, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\pandas\io\parsers\readers.py", line 620, in _read
+    parser = TextFileReader(filepath_or_buffer, **kwds)
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\pandas\io\parsers\readers.py", line 1620, in __init__
+    self._engine = self._make_engine(f, self.engine)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\pandas\io\parsers\readers.py", line 1880, in _make_engine
+    self.handles = get_handle(
+    
+  File "C:\Users\caerp\anaconda3\Lib\site-packages\pandas\io\common.py", line 873, in get_handle
+    handle = open(
+    
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\caerp\\Downloads\\git hub\\DASHBOARD-\\dashboarfinal\\data\\vector_caracteristicas_sleep.csv'
+C:\Users\caerp\anaconda3\Lib\site-packages\umap\umap_.py:1952: UserWarning: n_jobs value 1 overridden to 1 by setting random_state. Use no seed for parallelism.
+  warn(
+127.0.0.1 - - [30/Jun/2026 17:08:49] "GET /api/data HTTP/1.1" 200 -

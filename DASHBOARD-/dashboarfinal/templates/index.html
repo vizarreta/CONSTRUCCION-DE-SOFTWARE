@@ -1,0 +1,2638 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Espacio Latente - Sleep Health</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#eef2f6;color:#1f2937;overflow:hidden;height:100vh}
+.header{height:50px;background:#172033;color:#fff;padding:0 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #2f9c95;flex-shrink:0}
+.header h1{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex-shrink:1}
+.header-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:12px}
+.header-right span{font-size:11px;color:#cfd7e3;white-space:nowrap}
+/* ── Botones header ─────────────────────────────── */
+.hdr-btn{
+  color:#fff;border:none;padding:5px 12px;
+  border-radius:5px;cursor:pointer;font-weight:700;
+  font-size:11px;letter-spacing:.4px;
+  transition:transform .15s,box-shadow .15s;
+  white-space:nowrap;flex-shrink:0;
+}
+#btn-ml{background:linear-gradient(135deg,#2f9c95,#1a7a74);box-shadow:0 2px 8px rgba(47,156,149,.45)}
+#btn-ml:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(47,156,149,.6)}
+#btn-evaluar{background:linear-gradient(135deg,#6c7ae0,#4a54c0);box-shadow:0 2px 8px rgba(108,122,224,.45)}
+#btn-evaluar:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(108,122,224,.6)}
+@keyframes mlPulse{
+  0%,100%{box-shadow:0 2px 8px rgba(47,156,149,.45)}
+  50%{box-shadow:0 2px 16px rgba(47,156,149,.85)}
+}
+#btn-ml{animation:mlPulse 2.5s ease-in-out 3}
+#filter-toggle{background:#2a3a5c;color:#cfd7e3;border:1px solid #3f5277;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer;white-space:nowrap}
+#filter-toggle:hover{background:#3f5277;color:#fff}
+/* ── Menu Analisis (agrupa Evaluar/ML/Clustering/DBSCAN) ───────── */
+.hdr-menu-wrap{position:relative;flex-shrink:0}
+.hdr-menu{position:absolute;top:34px;right:0;background:#fff;border:1px solid #dce3ec;border-radius:7px;box-shadow:0 8px 22px rgba(15,23,42,.22);display:none;flex-direction:column;min-width:180px;z-index:200;overflow:hidden;padding:4px}
+.hdr-menu.open{display:flex}
+.hdr-menu .hdr-btn{border-radius:4px;text-align:left;width:100%;margin:1px 0}
+.hdr-menu .hdr-btn:hover{transform:none}
+#filter-panel{overflow:hidden;max-height:0;transition:max-height 0.25s ease;background:#e2e8f0;border-bottom:1px solid #cbd5e1}
+#filter-panel.open{max-height:300px}
+.filter-inner{padding:8px 16px 10px;display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start}
+.filter-group{display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+.filter-group>label{font-size:11px;font-weight:700;color:#354052;margin-right:2px}
+.filter-checkbox{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:#354052;cursor:pointer;padding:2px 6px;border-radius:3px;background:#fff;border:1px solid #cbd5e1}
+.filter-checkbox:hover{border-color:#2f9c95}
+.filter-checkbox input[type="checkbox"]{margin:0;width:12px;height:12px;cursor:pointer}
+.filter-checkbox.active{background:#e9f4f3;border-color:#2f9c95}
+.filter-range{display:flex;align-items:center;gap:4px;font-size:11px;color:#354052}
+.filter-range input[type="range"]{width:80px;cursor:pointer}
+.filter-range .rval{min-width:22px;text-align:center;font-weight:700;font-size:11px}
+/* Marquesina de selección (arrastrar para seleccionar varios puntos) */
+.marquee-brush .selection{fill:#2f6f9f;fill-opacity:0.12;stroke:#2f6f9f;stroke-width:1.5;stroke-dasharray:4 3}
+.marquee-brush .overlay{cursor:crosshair}
+.grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:4px;height:calc(100vh - 53px);padding:4px}
+.quad{background:#fff;border:1px solid #dce3ec;border-radius:6px;overflow:hidden;position:relative;display:flex;flex-direction:column;min-width:0}
+.quad-title{min-height:38px;font-size:12px;font-weight:700;color:#354052;padding:7px 11px;border-bottom:1px solid #e8edf3;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0}
+.quad-title span{white-space:nowrap}
+.quad-body{flex:1;position:relative;overflow:hidden;min-height:0}
+.controls-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+.controls-row label{font-size:11px;font-weight:600;color:#687386}
+.controls-row select{font-size:11px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;color:#243044;cursor:pointer;max-width:145px}
+.controls-row select:hover{border-color:#2f9c95}
+.tooltip{position:absolute;background:rgba(17,24,39,.92);color:#fff;padding:7px 10px;border-radius:4px;font-size:11px;line-height:1.45;pointer-events:none;opacity:0;z-index:100;white-space:nowrap}
+.axis-label{font-size:10px;fill:#7a8493}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:#4b5563}
+.legend-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.details-scroll{height:100%;padding:12px;overflow-y:auto}
+.empty-state{height:150px;border:1px dashed #cbd5e1;border-radius:6px;display:flex;align-items:center;justify-content:center;text-align:center;color:#7a8493;font-size:13px;padding:18px;line-height:1.4}
+.profile-card{border:1px solid #dfe7ef;border-radius:6px;background:#fbfcfe;padding:12px;margin-bottom:8px}
+.profile-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #e8edf3}
+.profile-head h4{font-size:15px;line-height:1.25;color:#172033;margin-top:2px}
+.detail-kicker{display:block;font-size:10px;color:#687386;font-weight:800;text-transform:uppercase}
+.badge{display:inline-flex;align-items:center;justify-content:center;padding:5px 9px;border-radius:999px;color:#fff;font-size:11px;font-weight:800;white-space:nowrap}
+.badge.ninguno{background:#2f6f9f}
+.badge.insomnio{background:#c94c4c}
+.badge.apnea-del-sueno{background:#5c8f3f}
+.badge.sin-dato{background:#6b7280}
+.profile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.profile-field{border:1px solid #edf1f5;border-radius:6px;background:#fff;padding:7px 8px;min-height:52px}
+.profile-field span{display:block;font-size:10px;color:#687386;text-transform:uppercase;margin-bottom:3px;font-weight:700}
+.profile-field strong{display:block;font-size:13px;color:#1f2937;line-height:1.25;word-break:break-word}
+.status-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.status-chip{border-radius:999px;padding:4px 8px;font-size:11px;font-weight:700;background:#e9f4f3;color:#1f6f69}
+.status-chip.warning{background:#fff1d6;color:#8a5a00}
+.method-notes{font-size:11px;color:#7a8493;line-height:1.45}
+.method-notes p{margin-bottom:4px}
+.hint{padding:20px;text-align:center;color:#8a95a5;font-size:13px}
+/* ── Alertas clínicas ───────────────────────────── */
+.alerta-box{border-radius:6px;padding:9px 12px;font-size:11.5px;line-height:1.45;margin-top:6px;display:flex;gap:8px;align-items:flex-start}
+.alerta-box.peligro{background:#fff0f0;border:1px solid #f5c6cb;color:#7a1f1f}
+.alerta-box.advertencia{background:#fffbec;border:1px solid #ffe08a;color:#7a5a00}
+.alerta-box.info{background:#eef5ff;border:1px solid #b8d4f8;color:#1a3f6f}
+.alerta-box.ok{background:#edfaf3;border:1px solid #a3d9b8;color:#145229}
+.alerta-icono{font-size:16px;flex-shrink:0;line-height:1.2}
+.alerta-titulo{font-weight:800;display:block;margin-bottom:2px}
+.alerta-rec{font-size:10.5px;margin-top:3px;opacity:.8;font-style:italic}
+.alerta-seccion{margin-top:10px;padding-top:8px;border-top:1px solid #edf1f5}
+.alerta-seccion-label{font-size:10px;font-weight:800;text-transform:uppercase;color:#687386;letter-spacing:.5px;margin-bottom:4px}
+/* ── Formulario evaluador ───────────────────────── */
+.eval-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.eval-field label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;color:#687386;margin-bottom:3px}
+.eval-field input,.eval-field select{width:100%;padding:6px 8px;font-size:12px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;color:#1f2937}
+.eval-field input:focus,.eval-field select:focus{outline:none;border-color:#2f9c95}
+.eval-result{border-radius:8px;padding:14px;margin-top:10px;background:#f8fafc;border:1px solid #dce3ec}
+.pred-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;font-weight:800;font-size:13px;margin-bottom:10px}
+.pred-chip.apnea{background:#d4edda;color:#1a5c30}
+.pred-chip.insomnio{background:#f8d7da;color:#721c24}
+.pred-chip.riesgo{background:#fff3cd;color:#856404}
+.pred-chip.ninguno{background:#d1ecf1;color:#0c5460}
+/* ── Panel riesgo global ────────────────────────── */
+.risk-stat{background:#eef2f6;border-radius:8px;padding:10px;text-align:center}
+.risk-stat .val{font-size:22px;font-weight:800;color:#172033;line-height:1}
+.risk-stat .lbl{font-size:10px;color:#687386;margin-top:3px}
+.risk-stat.danger .val{color:#c94c4c}
+.risk-stat.warn .val{color:#b87a00}
+.risk-stat.safe .val{color:#2f7a5c}
+/* ── Tabs Cuadrante 4 ───────────────────────────── */
+.pc-export-btn{font-size:12px;padding:2px 7px;border:1px solid #dce3ec;border-radius:4px;background:#fff;cursor:pointer;color:#354052;line-height:1.4}
+.pc-export-btn:hover{background:#eef2f6;border-color:#2f9c95}
+.q4-tab{
+  font-size:10px;font-weight:700;padding:3px 9px;border-radius:4px;cursor:pointer;
+  border:1px solid #cbd5e1;background:#fff;color:#687386;
+  transition:background .15s,color .15s;white-space:nowrap;
+}
+.q4-tab:hover{background:#eef2f6;color:#354052}
+.q4-tab.active{background:#2f9c95;color:#fff;border-color:#2f9c95}
+.q4-tab-panel{display:block}
+/* ── Navegación entre clusters/regiones ──────────────────── */
+.cluster-nav{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.cluster-nav button{font-size:11px;padding:4px 10px;border-radius:4px;border:1px solid #cbd5e1;background:#fff;cursor:pointer;font-weight:700;color:#354052}
+.cluster-nav button:hover{background:#eef2f6;border-color:#2f9c95}
+.cluster-nav-label{font-size:12px;font-weight:800;color:#172033;min-width:190px}
+.active-cluster-card{outline:3px solid #172033;box-shadow:0 0 0 3px rgba(23,32,51,.15)}
+/* ── Insights contraste ─────────────────────────── */
+.insight-box{border-radius:6px;padding:9px 12px;font-size:11.5px;line-height:1.5;margin-bottom:4px;display:flex;gap:8px;align-items:flex-start}
+.insight-box.positive{background:#fff0f0;border:1px solid #f5c6cb;color:#7a1f1f}
+.insight-box.negative{background:#edfaf3;border:1px solid #a3d9b8;color:#145229}
+.insight-box.neutral{background:#eef5ff;border:1px solid #b8d4f8;color:#1a3f6f}
+.insight-header{font-size:12px;font-weight:800;color:#172033;margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid #edf1f5}
+.contraste-bar-wrap{margin:3px 0}
+.contraste-bar-label{font-size:10px;color:#687386;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px}
+.contraste-bars{display:flex;flex-direction:column;gap:3px}
+.cbar-row{display:flex;align-items:center;gap:6px}
+.cbar-name{font-size:10px;color:#4b5563;width:64px;flex-shrink:0;text-align:right}
+.cbar-track{flex:1;background:#eef2f6;border-radius:3px;height:14px;position:relative;overflow:visible}
+.cbar-fill{height:100%;border-radius:3px;position:relative;transition:width .4s ease;min-width:2px}
+.cbar-val{font-size:9px;font-weight:700;margin-left:4px;white-space:nowrap;color:#354052}
+@media(max-width:520px){
+body{overflow:auto;height:auto}
+.header{height:auto;align-items:flex-start;flex-direction:column;gap:8px;padding-bottom:10px}
+.header span{text-align:left}
+.header-right{width:100%;justify-content:space-between;flex-wrap:wrap}
+.grid{grid-template-columns:1fr;grid-template-rows:repeat(4,330px);height:auto;min-height:calc(100vh - 50px)}
+.quad-title{align-items:flex-start;flex-direction:column}
+.controls-row{justify-content:flex-start}
+.profile-grid{grid-template-columns:1fr}
+.filter-inner{flex-direction:column;gap:8px}
+}
+
+/* ===== Mejoras UX (selección / leyenda fija / tour) ===== */
+#fixed-legend{position:fixed;left:12px;bottom:12px;z-index:150;background:rgba(255,255,255,.94);border:1px solid #e2e6ea;border-radius:8px;padding:6px 10px;box-shadow:0 2px 10px rgba(17,24,39,.12);display:flex;align-items:center;gap:12px;flex-wrap:wrap;max-width:60vw}
+#fixed-legend .fl-title{font-size:10px;font-weight:700;color:#687386;text-transform:uppercase;letter-spacing:.03em}
+#fixed-legend .fl-item{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#374151}
+.tour-highlight{outline:3px solid #2f9c95 !important;outline-offset:3px;border-radius:10px;box-shadow:0 0 0 4px rgba(47,156,149,.25);transition:outline .2s}
+#tour-overlay{display:none;position:fixed;inset:0;z-index:400;pointer-events:none}
+#tour-box{pointer-events:auto;position:fixed;left:50%;bottom:26px;transform:translateX(-50%);width:min(560px,92vw);background:#fff;border:1px solid #e2e6ea;border-radius:12px;box-shadow:0 12px 40px rgba(17,24,39,.28);padding:16px 18px}
+#tour-box #tour-titulo{font-size:15px;font-weight:800;color:#172033;margin-bottom:6px;padding-right:22px}
+#tour-box #tour-texto{font-size:12.5px;color:#354052;line-height:1.55}
+#tour-box #tour-footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+#tour-box #tour-progreso{font-size:11px;color:#687386;font-weight:700}
+#tour-box button{font-size:12px;padding:6px 12px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;color:#2a3a5c;cursor:pointer;margin-left:6px}
+#tour-box #tour-next{background:#2f9c95;color:#fff;border-color:#2f9c95;font-weight:700}
+#tour-box button:disabled{opacity:.4;cursor:default}
+#tour-box #tour-close{position:absolute;top:8px;right:10px;border:none;background:none;font-size:20px;color:#9aa5b1;margin:0;padding:0}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Espacio Latente - Sleep Health</h1>
+  <div class="header-right">
+    <span id="data-summary">Cargando...</span>
+    <span id="buscar-id-wrap" style="display:flex;align-items:center;gap:4px">
+      <input type="number" id="buscar-id-input" placeholder="ID paciente" style="width:88px;font-size:11px;padding:3px 6px;border:1px solid #cbd5e1;border-radius:3px;background:#fff;color:#354052" onkeydown="if(event.key==='Enter')buscarPacientePorId()">
+      <button id="btn-buscar-id" class="hdr-btn" onclick="buscarPacientePorId()" title="Buscar y resaltar paciente por ID">&#x1F50D; Buscar</button>
+      <span id="buscar-id-msg" style="font-size:10px;color:#E56458"></span>
+    </span>
+    <button id="filter-toggle">Filtros ▾</button>
+    <div class="hdr-menu-wrap" id="hdr-menu-wrap">
+      <button id="hdr-menu-toggle" class="hdr-btn" style="background:#2a3a5c" onclick="toggleHdrMenu()">&#x1F4CA; Análisis ▾</button>
+      <div class="hdr-menu" id="hdr-menu">
+        <button id="btn-evaluar" class="hdr-btn" onclick="abrirEvaluador();toggleHdrMenu(false)" title="Evaluar nuevo paciente">&#x1F4CB; Evaluar</button>
+        <button id="btn-ml" class="hdr-btn" onclick="loadMLResults();toggleHdrMenu(false)" title="Ver resultados del pipeline ML">&#x1F916; Pipeline ML</button>
+        <button id="btn-cluster" class="hdr-btn" onclick="loadClustering();toggleHdrMenu(false)" title="Segmentacion por clustering (K-Means)">&#x1F9E9; Clustering</button>
+        <button id="btn-dbscan" class="hdr-btn" onclick="loadDbscan();toggleHdrMenu(false)" title="Clustering por densidad y deteccion de anomalias (DBSCAN)">&#x1F6A8; DBSCAN</button>
+        <button id="btn-tour" class="hdr-btn" onclick="iniciarTour();toggleHdrMenu(false)" title="Recorrido guiado del dashboard">&#x1F393; Tour guiado</button>
+        <button id="btn-pdf" class="hdr-btn" onclick="exportarInformePDF();toggleHdrMenu(false)" title="Exportar informe de la sesión a PDF">&#x1F4C4; Informe PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="filter-panel">
+  <div class="filter-inner">
+    <div class="filter-group">
+      <label>Trastorno:</label>
+      <label class="filter-checkbox active"><input type="checkbox" value="Ninguno" checked onchange="onFilterChange()"> Ninguno</label>
+      <label class="filter-checkbox active"><input type="checkbox" value="Insomnio" checked onchange="onFilterChange()"> Insomnio</label>
+      <label class="filter-checkbox active"><input type="checkbox" value="Apnea del sueño" checked onchange="onFilterChange()"> Apnea</label>
+    </div>
+    <div class="filter-group">
+      <label>Género:</label>
+      <label class="filter-checkbox active"><input type="checkbox" value="Hombre" checked onchange="onFilterChange()"> Hombre</label>
+      <label class="filter-checkbox active"><input type="checkbox" value="Mujer" checked onchange="onFilterChange()"> Mujer</label>
+    </div>
+    <div class="filter-group">
+      <label>Anomalía IQR:</label>
+      <select id="filter-anomaly" onchange="onFilterChange()" style="font-size:11px;padding:3px 6px;border:1px solid #cbd5e1;border-radius:3px;background:#fff;color:#354052">
+        <option value="all">Todas</option>
+        <option value="anomaly">Solo anomalías</option>
+        <option value="normal">Sin anomalías</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Edad:</label>
+      <div class="filter-range">
+        <input type="range" id="filter-edad-min" min="27" max="59" value="27" oninput="onFilterChange()">
+        <span class="rval" id="filter-edad-min-val">27</span>
+        <span>—</span>
+        <input type="range" id="filter-edad-max" min="27" max="59" value="59" oninput="onFilterChange()">
+        <span class="rval" id="filter-edad-max-val">59</span>
+      </div>
+    </div>
+    <div class="filter-group">
+      <label>Calidad sueño:</label>
+      <div class="filter-range">
+        <input type="range" id="filter-calidad-min" min="0" max="10" value="0" oninput="onFilterChange()">
+        <span class="rval" id="filter-calidad-min-val">0</span>
+        <span>—</span>
+        <input type="range" id="filter-calidad-max" min="0" max="10" value="10" oninput="onFilterChange()">
+        <span class="rval" id="filter-calidad-max-val">10</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="grid">
+  <!-- Cuadrante 1: Scatter Espacio Latente (técnica principal) -->
+  <div class="quad" id="quad-scatter">
+    <div class="quad-title">
+      <span>Cuadrante 1: Espacio latente X,Y <span style="font-weight:400;color:#64748b;font-size:10px">· arrastra para seleccionar</span></span>
+      <div class="controls-row">
+        <label for="select-tech">Técnica:</label>
+        <select id="select-tech">
+          <option value="pca">PCA</option>
+          <option value="tsne">t-SNE / TSNET</option>
+          <option value="umap">UMAP / ELMAP</option>
+          <option value="mds">MDS</option>
+        </select>
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;color:#354052" title="Cuando está activo, los Cuadrantes 2 y 3 solo muestran los puntos que selecciones aquí">
+          <input type="checkbox" id="chk-filtrar-seleccion" onchange="toggleFiltrarSeleccion()"> &#x1F517; Solo selección en otros cuadrantes
+        </label>
+        <button class="pc-export-btn" onclick="exportQuadPNG('scatter-container','cuadrante1_espacio_latente.png')" title="Exportar como imagen PNG">📷</button>
+        <span id="sel-toolbar" style="display:none;align-items:center;gap:6px;margin-left:4px"><span id="sel-count" style="font-size:11px;font-weight:700;color:#2f6f9f"></span><button class="pc-export-btn" onclick="limpiarSeleccion()" title="Limpiar selección">✕ Limpiar</button></span>
+      </div>
+    </div>
+    <div class="quad-body" id="scatter-container"></div>
+  </div>
+
+  <!-- Cuadrante 2: Scatter Espacio Latente (técnica independiente) -->
+  <div class="quad" id="quad-bar">
+    <div class="quad-title">
+      <span>Cuadrante 2: Espacio latente X,Y (vista comparativa) <span style="font-weight:400;color:#64748b;font-size:10px">· arrastra para seleccionar</span></span>
+      <div class="controls-row">
+        <label for="select-bar-tech">Técnica:</label>
+        <select id="select-bar-tech">
+          <option value="pca">PCA</option>
+          <option value="tsne">t-SNE / TSNET</option>
+          <option value="umap">UMAP / ELMAP</option>
+          <option value="mds">MDS</option>
+        </select>
+        <button class="pc-export-btn" onclick="exportQuadPNG('bar-container','cuadrante2_vista_comparativa.png')" title="Exportar como imagen PNG">📷</button>
+      </div>
+    </div>
+    <div class="quad-body" id="bar-container"></div>
+  </div>
+
+  <!-- Cuadrante 3: Coordenadas Paralelas -->
+  <div class="quad" id="quad-hist">
+    <div class="quad-title">
+      <span>Cuadrante 3: Coordenadas Paralelas</span>
+      <div class="controls-row">
+        <label for="select-pc-color">Color:</label>
+        <select id="select-pc-color" onchange="drawParallelCoords()">
+          <option value="trastorno">Trastorno</option>
+          <option value="genero">Género</option>
+        </select>
+        <button class="pc-export-btn" onclick="exportQuadPNG('hist-container','cuadrante3_coordenadas_paralelas.png')" title="Exportar como imagen PNG">📷</button>
+      </div>
+    </div>
+    <div class="quad-body" id="hist-container"></div>
+  </div>
+
+  <!-- Cuadrante 4: Explicabilidad -->
+  <div class="quad" id="quad-details">
+    <div class="quad-title">
+      <span>Cuadrante 4: Explicabilidad</span>
+      <div class="controls-row" id="q4-tabs" style="gap:2px">
+        <button class="q4-tab active" data-tab="insights" onclick="switchTab('insights')">&#x1F4A1; Insights</button>
+        <button class="q4-tab" data-tab="perfil" onclick="switchTab('perfil')">&#x1F464; Perfil</button>
+        <button class="q4-tab" data-tab="alertas" onclick="switchTab('alertas')">&#x1F514; Alertas</button>
+        <button class="q4-tab" data-tab="comparar" onclick="switchTab('comparar')">&#x1F19A; Comparar</button>
+        <button class="q4-tab" data-tab="investigacion" onclick="switchTab('investigacion')">&#x1F52C; Investigación</button>
+      </div>
+    </div>
+    <div class="quad-body">
+      <div class="details-scroll">
+        <div id="legend-container" class="legend"></div>
+
+        <!-- Tab: Insights (contraste) -->
+        <div id="tab-insights" class="q4-tab-panel">
+          <div id="panel-insights-text"></div>
+          <div id="panel-contraste" style="margin-top:8px"></div>
+        </div>
+
+        <!-- Tab: Perfil -->
+        <div id="tab-perfil" class="q4-tab-panel" style="display:none">
+          <div id="panel-detalles">
+            <div class="empty-state">Seleccione puntos en el espacio latente para ver perfiles.</div>
+          </div>
+        </div>
+
+        <!-- Tab: Alertas -->
+        <div id="tab-alertas" class="q4-tab-panel" style="display:none">
+          <div id="panel-alertas"></div>
+        </div>
+
+        <!-- Tab: Comparar cohortes -->
+        <div id="tab-comparar" class="q4-tab-panel" style="display:none">
+          <div style="display:flex;gap:14px;margin-bottom:10px;align-items:center;flex-wrap:wrap;font-size:11px;color:#354052">
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
+              <input type="radio" name="modo-comparacion" value="categoria" checked onchange="setModoComparacion('categoria')"> Por categoría
+            </label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
+              <input type="radio" name="modo-comparacion" value="manual" onchange="setModoComparacion('manual')"> Por selección manual (Cuadrante 1 vs 2)
+            </label>
+          </div>
+          <div id="comparacion-categoria-controls" style="display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap">
+            <label style="font-size:11px;color:#687386">Cohorte A:</label>
+            <select id="cohorte-a-select" onchange="renderComparacionCohortes()" style="font-size:11px;padding:2px 6px;border:1px solid #dce3ec;border-radius:4px"></select>
+            <label style="font-size:11px;color:#687386">vs Cohorte B:</label>
+            <select id="cohorte-b-select" onchange="renderComparacionCohortes()" style="font-size:11px;padding:2px 6px;border:1px solid #dce3ec;border-radius:4px"></select>
+          </div>
+          <div id="comparacion-manual-controls" style="display:none;margin-bottom:10px;font-size:11px;color:#687386">
+            <div style="margin-bottom:4px"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#2f9c95;margin-right:4px"></span>Grupo A: haz clic en puntos del <strong>Cuadrante 1</strong> (<span id="grupo-a-count">0</span> seleccionados)</div>
+            <div style="margin-bottom:6px"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#8b5cf6;margin-right:4px"></span>Grupo B: haz clic en puntos del <strong>Cuadrante 2</strong> (<span id="grupo-b-count">0</span> seleccionados)</div>
+            <button class="pc-export-btn" onclick="limpiarSeleccionManual()">Limpiar selección</button>
+          </div>
+          <div id="panel-comparacion"><div class="empty-state">Selecciona dos cohortes para comparar.</div></div>
+        </div>
+
+        <!-- Tab: Investigación (metodología + loadings PCA + importancia de atributos) -->
+        <div id="tab-investigacion" class="q4-tab-panel" style="display:none">
+          <div id="panel-metodologia"><div class="empty-state">Cargando metodología...</div></div>
+          <div id="panel-loadings-pca" style="margin-top:14px"></div>
+          <div id="panel-importancia-atributos" style="margin-top:14px"></div>
+        </div>
+
+        <div id="var-exp-container" style="margin-top:8px;font-size:11px;color:#687386"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+<div id="fixed-legend"></div>
+
+<!-- Modal Pipeline ML -->
+<div id="ml-panel" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(17,24,39,.7);z-index:200;overflow-y:auto;padding:30px">
+  <div style="background:#fff;border-radius:8px;max-width:760px;margin:20px auto;padding:24px;position:relative">
+    <button id="btn-ml-close" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:20px;cursor:pointer;color:#687386">&times;</button>
+    <h2 style="font-size:16px;color:#172033;margin-bottom:6px">🤖 Pipeline ML — Resultados y Riesgo Global</h2>
+    <p style="font-size:11px;color:#687386;margin-bottom:14px">Early Warning System · GradientBoostingClassifier · Motor de Reglas Clínicas</p>
+    <div id="ml-global-risk" style="margin-bottom:16px"></div>
+    <div id="ml-content" style="font-size:13px;color:#1f2937;line-height:1.5">
+      <div style="text-align:center;padding:30px;color:#687386">Cargando resultados ML...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Clustering (K-Means) -->
+<div id="cluster-panel" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(17,24,39,.7);z-index:200;overflow-y:auto;padding:30px">
+  <div style="background:#fff;border-radius:8px;max-width:1000px;margin:20px auto;padding:24px;position:relative">
+    <button id="btn-cluster-close" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:20px;cursor:pointer;color:#687386">&times;</button>
+    <h2 style="font-size:16px;color:#172033;margin-bottom:6px">🧩 Clustering — Segmentación de Personas (K-Means)</h2>
+    <p style="font-size:11px;color:#687386;margin-bottom:14px">Aprendizaje no supervisado · Método del Codo + Coeficiente de Silueta · Proyección PCA 2D</p>
+    <div id="cluster-content" style="font-size:13px;color:#1f2937;line-height:1.5">
+      <div style="text-align:center;padding:30px;color:#687386">Cargando clustering...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal DBSCAN (densidad + anomalias) -->
+<div id="dbscan-panel" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(17,24,39,.7);z-index:200;overflow-y:auto;padding:30px">
+  <div style="background:#fff;border-radius:8px;max-width:1000px;margin:20px auto;padding:24px;position:relative">
+    <button id="btn-dbscan-close" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:20px;cursor:pointer;color:#687386">&times;</button>
+    <h2 style="font-size:16px;color:#172033;margin-bottom:6px">🚨 DBSCAN — Clustering por Densidad y Detección de Anomalías</h2>
+    <p style="font-size:11px;color:#687386;margin-bottom:14px">Aprendizaje no supervisado basado en densidad · Gráfico de Distancia-k para elegir eps · Proyección PCA 2D</p>
+    <div id="dbscan-content" style="font-size:13px;color:#1f2937;line-height:1.5">
+      <div style="text-align:center;padding:30px;color:#687386">Cargando DBSCAN...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Evaluador Nuevo Paciente -->
+<div id="eval-panel" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(17,24,39,.7);z-index:200;overflow-y:auto;padding:30px">
+  <div style="background:#fff;border-radius:8px;max-width:600px;margin:20px auto;padding:24px;position:relative">
+    <button id="btn-eval-close" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:20px;cursor:pointer;color:#687386">&times;</button>
+    <h2 style="font-size:16px;color:#172033;margin-bottom:4px">📋 Evaluador de Nuevo Paciente</h2>
+    <p style="font-size:11px;color:#687386;margin-bottom:14px">Ingresa los datos clínicos para obtener predicción + alertas del sistema de alerta temprana.</p>
+    <div class="eval-form">
+      <div class="eval-field"><label for="ef-imc">Categoría IMC</label>
+        <select id="ef-imc">
+          <option value="Normal">Normal</option>
+          <option value="Overweight">Sobrepeso (Overweight)</option>
+          <option value="Obese">Obesidad (Obese)</option>
+        </select>
+      </div>
+      <div class="eval-field"><label for="ef-presion">Presión arterial (sistólica/diastólica)</label>
+        <input id="ef-presion" type="text" placeholder="ej. 135/88" value="120/80">
+      </div>
+      <div class="eval-field"><label for="ef-sueno">Duración del sueño (horas)</label>
+        <input id="ef-sueno" type="number" min="3" max="12" step="0.5" value="7">
+      </div>
+      <div class="eval-field"><label for="ef-estres">Nivel de estrés (1-10)</label>
+        <input id="ef-estres" type="number" min="1" max="10" step="1" value="5">
+      </div>
+      <div class="eval-field"><label for="ef-fc">Frecuencia cardíaca (bpm)</label>
+        <input id="ef-fc" type="number" min="40" max="150" step="1" value="72">
+      </div>
+      <div class="eval-field"><label for="ef-actividad">Actividad física (min/día)</label>
+        <input id="ef-actividad" type="number" min="0" max="120" step="5" value="45">
+      </div>
+      <div class="eval-field"><label for="ef-calidad">Calidad del sueño (1-10)</label>
+        <input id="ef-calidad" type="number" min="1" max="10" step="1" value="7">
+      </div>
+    </div>
+    <button onclick="ejecutarEvaluacion()" style="background:linear-gradient(135deg,#6c7ae0,#4a54c0);color:#fff;border:none;padding:8px 20px;border-radius:5px;cursor:pointer;font-weight:700;font-size:12px;width:100%;margin-top:4px">🔍 Analizar Riesgo Clínico</button>
+    <div id="eval-result"></div>
+    <div id="eval-history-wrap" style="margin-top:14px;border-top:1px solid #e8edf3;padding-top:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:11px;font-weight:800;text-transform:uppercase;color:#687386;cursor:pointer" onclick="toggleEvalHistory()">&#x1F553; Historial de evaluaciones (<span id="eval-history-count">0</span>) <span id="eval-history-caret">▾</span></span>
+        <button onclick="limpiarEvalHistory()" style="font-size:10px;border:none;background:none;color:#9aa5b1;cursor:pointer;text-decoration:underline">Limpiar</button>
+      </div>
+      <div id="eval-history-list" style="display:none;margin-top:8px;max-height:220px;overflow-y:auto"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const TOOLTIP = d3.select("#tooltip");
+const MARGIN = {t: 20, r: 20, b: 35, l: 45};
+// Forma por trastorno (ademas de color) para que la lectura no dependa solo
+// del color -> accesible para daltonismo y mas clara al proyectar/imprimir.
+const TRASTORNO_SHAPES = {
+  "Ninguno": d3.symbolCircle,
+  "Insomnio": d3.symbolTriangle,
+  "Apnea del sueño": d3.symbolSquare,
+};
+const TRASTORNO_SHAPE_DEFAULT = d3.symbolDiamond;
+function shapeForTrastorno(trastorno) {
+  return TRASTORNO_SHAPES[trastorno] || TRASTORNO_SHAPE_DEFAULT;
+}
+let DATA = null;
+let selectedIds = new Set();
+let lastClickedId = null;
+let manualCompareMode = false;
+let groupASelection = new Set();
+let groupBSelection = new Set();
+let filtrarPorSeleccionActivo = false;
+
+function toggleFiltrarSeleccion() {
+  filtrarPorSeleccionActivo = document.getElementById("chk-filtrar-seleccion").checked;
+  drawScatter();
+  drawBarChart();
+  drawParallelCoords();
+}
+
+function getTech() {
+  return document.getElementById("select-tech").value;
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[ch]));
+}
+
+function formatValue(value, suffix = "") {
+  if (value === null || value === undefined || value === "") return "Sin dato";
+  if (typeof value === "number") {
+    const formatted = Number.isInteger(value) ? value.toString() : value.toFixed(1);
+    return `${formatted}${suffix}`;
+  }
+  return `${escapeHTML(value)}${suffix}`;
+}
+
+function badgeClass(value) {
+  return String(value || "sin dato")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "") || "sin-dato";
+}
+
+function selectedRecord() {
+  if (lastClickedId !== null) return DATA.registros.find(r => r.id === lastClickedId) || null;
+  if (selectedIds.size > 0) {
+    const first = selectedIds.values().next().value;
+    return DATA.registros.find(r => r.id === first) || null;
+  }
+  return null;
+}
+
+function selectedRecords() {
+  return DATA.registros.filter(r => selectedIds.has(r.id));
+}
+
+/* ── Filtros interactivos ── */
+let filterState = {};
+
+function readFilterState() {
+  const trastorno = [];
+  document.querySelectorAll('#filter-panel .filter-group:first-child input[type="checkbox"]:checked').forEach(cb => trastorno.push(cb.value));
+  const genero = [];
+  document.querySelectorAll('#filter-panel .filter-group:nth-child(2) input[type="checkbox"]:checked').forEach(cb => genero.push(cb.value));
+  filterState = {
+    trastorno,
+    genero,
+    anomalia: document.getElementById('filter-anomaly').value,
+    edadMin: +document.getElementById('filter-edad-min').value,
+    edadMax: +document.getElementById('filter-edad-max').value,
+    calidadMin: +document.getElementById('filter-calidad-min').value,
+    calidadMax: +document.getElementById('filter-calidad-max').value,
+  };
+  document.getElementById('filter-edad-min-val').textContent = filterState.edadMin;
+  document.getElementById('filter-edad-max-val').textContent = filterState.edadMax;
+  document.getElementById('filter-calidad-min-val').textContent = filterState.calidadMin;
+  document.getElementById('filter-calidad-max-val').textContent = filterState.calidadMax;
+}
+
+function isRecordVisible(r) {
+  if (!filterState.trastorno.includes(r.trastorno)) return false;
+  if (r.genero && !filterState.genero.includes(r.genero)) return false;
+  if (filterState.anomalia === 'anomaly' && Number(r.tiene_anomalia_iqr) !== 1) return false;
+  if (filterState.anomalia === 'normal' && Number(r.tiene_anomalia_iqr) === 1) return false;
+  if (r.edad != null && (r.edad < filterState.edadMin || r.edad > filterState.edadMax)) return false;
+  if (r.calidad_sueno != null && (r.calidad_sueno < filterState.calidadMin || r.calidad_sueno > filterState.calidadMax)) return false;
+  return true;
+}
+
+function filteredIndices() {
+  const idx = [];
+  DATA.registros.forEach((r, i) => { if (isRecordVisible(r)) idx.push(i); });
+  return idx;
+}
+
+function updateDataSummary() {
+  const total = DATA.registros.length;
+  const visible = filteredIndices().length;
+  document.getElementById("data-summary").textContent =
+    `${visible}/${total} usuarios · ${DATA.feature_cols.length} dims → 2D`;
+}
+
+function buscarPacientePorId() {
+  if (!DATA) return;
+  const input = document.getElementById("buscar-id-input");
+  const msg = document.getElementById("buscar-id-msg");
+  const idVal = Number(input.value);
+  msg.textContent = "";
+  if (!input.value || Number.isNaN(idVal)) {
+    msg.textContent = "Ingresa un ID";
+    return;
+  }
+  const rec = DATA.registros.find(r => r.id === idVal);
+  if (!rec) {
+    msg.textContent = "ID no encontrado";
+    return;
+  }
+  selectedIds.clear();
+  selectedIds.add(rec.id);
+  lastClickedId = rec.id;
+  const visibleIds = new Set(filteredIndices().map(i => DATA.registros[i].id));
+  if (!visibleIds.has(rec.id)) {
+    msg.textContent = `#${rec.id} está oculto por los filtros actuales (resaltado igual)`;
+  }
+  drawScatter();
+  drawBarChart();
+  drawParallelCoords();
+  updateDetails(selectedRecord());
+  switchTab("perfil");
+}
+
+function toggleHdrMenu(forceState) {
+  const menu = document.getElementById("hdr-menu");
+  const shouldOpen = typeof forceState === "boolean" ? forceState : !menu.classList.contains("open");
+  menu.classList.toggle("open", shouldOpen);
+}
+document.addEventListener("click", (ev) => {
+  const wrap = document.getElementById("hdr-menu-wrap");
+  if (wrap && !wrap.contains(ev.target)) toggleHdrMenu(false);
+});
+
+function onFilterChange() {
+  if (!DATA) return;
+  readFilterState();
+  // Limpiar selección de puntos que ya no son visibles
+  const visibleIds = new Set(filteredIndices().map(i => DATA.registros[i].id));
+  selectedIds.forEach(id => { if (!visibleIds.has(id)) selectedIds.delete(id); });
+  if (!visibleIds.has(lastClickedId)) lastClickedId = null;
+  updateDataSummary();
+  drawScatter();
+  drawBarChart();
+  drawParallelCoords();
+  updateDetails(selectedRecord());
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("filter-toggle");
+  const panel = document.getElementById("filter-panel");
+  btn.addEventListener("click", () => {
+    panel.classList.toggle("open");
+    btn.textContent = panel.classList.contains("open") ? "Filtros ▴" : "Filtros ▾";
+  });
+});
+
+/* ── Scatter Plot genérico ── */
+function drawScatterInContainer(containerId, techSelectId, varExpContainerId, compareGroup) {
+  const container = document.getElementById(containerId);
+  const rect = container.getBoundingClientRect();
+  const w = rect.width || 600;
+  const h = rect.height || 300;
+  container.innerHTML = "";
+
+  const svg = d3.select(container).append("svg").attr("width", w).attr("height", h);
+  const techEl = document.getElementById(techSelectId);
+  const tech = techEl ? techEl.value : "pca";
+  const coords = DATA[tech].coords;
+
+  const visIdx = filteredIndices();
+  const xExt = d3.extent(coords, d => d[0]);
+  const yExt = d3.extent(coords, d => d[1]);
+  const xPad = (xExt[1] - xExt[0]) * 0.1 || 1;
+  const yPad = (yExt[1] - yExt[0]) * 0.1 || 1;
+  const xScale = d3.scaleLinear().domain([xExt[0] - xPad, xExt[1] + xPad]).range([MARGIN.l, w - MARGIN.r]);
+  const yScale = d3.scaleLinear().domain([yExt[0] - yPad, yExt[1] + yPad]).range([h - MARGIN.b, MARGIN.t]);
+
+  svg.append("g")
+    .attr("transform", `translate(0,${h - MARGIN.b})`)
+    .call(d3.axisBottom(xScale).ticks(6))
+    .selectAll("text").attr("font-size", "9px");
+  svg.append("g")
+    .attr("transform", `translate(${MARGIN.l},0)`)
+    .call(d3.axisLeft(yScale).ticks(6))
+    .selectAll("text").attr("font-size", "9px");
+  svg.append("text")
+    .attr("class","axis-label")
+    .attr("x", w / 2).attr("y", h - 4).attr("text-anchor","middle")
+    .text("Dimensión X");
+  svg.append("text")
+    .attr("class","axis-label")
+    .attr("x", 8).attr("y", h / 2).attr("text-anchor","middle")
+    .attr("transform","rotate(-90,8,"+h/2+")")
+    .text("Dimensión Y");
+
+  // ── Marquesina de selección ──────────────────────────────────────────
+  // Se crea la capa AHORA, antes de los puntos, para que quede por debajo
+  // de ellos y no bloquee el clic individual sobre cada punto.
+  const marqueeLayer = svg.append("g").attr("class", "marquee-brush");
+
+  const useCompareSel = manualCompareMode && !!compareGroup;
+  const activeSelSet = useCompareSel ? (compareGroup === "A" ? groupASelection : groupBSelection) : selectedIds;
+  const selStrokeColor = useCompareSel ? (compareGroup === "A" ? "#2f9c95" : "#8b5cf6") : "#111827";
+  const hasSelection = activeSelSet.size > 0;
+  const visSet = new Set(visIdx);
+  const idToIdx = new Map(DATA.registros.map((r, i) => [r.id, i]));
+
+  const aplicarFiltroSeleccion = filtrarPorSeleccionActivo && !useCompareSel && selectedIds.size > 0 && containerId !== "scatter-container";
+  const datosBase = aplicarFiltroSeleccion ? DATA.registros.filter(d => selectedIds.has(d.id)) : DATA.registros;
+
+  const symGenMain = d3.symbol();
+  svg.append("g").selectAll("path.dot")
+    .data(datosBase)
+    .join("path")
+    .attr("class", "dot")
+    .attr("transform", d => { const i = idToIdx.get(d.id); return `translate(${xScale(coords[i][0])},${yScale(coords[i][1])})`; })
+    .attr("d", d => symGenMain.type(shapeForTrastorno(d.trastorno)).size(activeSelSet.has(d.id) ? 130 : 60)())
+    .attr("fill", d => visSet.has(idToIdx.get(d.id)) ? (DATA.colores_trastorno[d.trastorno] || "#888") : "#ccc")
+    .attr("stroke", d => activeSelSet.has(d.id) ? selStrokeColor : "#fff")
+    .attr("stroke-width", d => activeSelSet.has(d.id) ? 2.5 : 0.6)
+    .attr("opacity", d => activeSelSet.has(d.id) ? 0.95 : (!visSet.has(idToIdx.get(d.id)) ? 0.15 : (hasSelection && !activeSelSet.has(d.id) ? 0.3 : 0.78)))
+    .style("cursor","pointer")
+    .on("mouseenter", (ev,d) => {
+      TOOLTIP.style("opacity",1).html(
+        `<strong>Empleado #${d.id}</strong> · ${escapeHTML(d.trastorno)}<br>` +
+        `${escapeHTML(d.ocupacion || "Sin ocupacion")}<br>` +
+        `Edad: ${formatValue(d.edad, " años")} · Sueño: ${formatValue(d.duracion_sueno_horas, " h")} · Cal: ${formatValue(d.calidad_sueno)}/10<br>` +
+        `Estrés: ${formatValue(d.nivel_estres, " / 10")} · Déficit: ${formatValue(d.deficit_sueno, " h")} · Salud: ${formatValue(d.puntaje_salud_sueno)}`
+      );
+    })
+    .on("mousemove", ev => TOOLTIP.style("left",(ev.pageX+12)+"px").style("top",(ev.pageY-10)+"px"))
+    .on("mouseleave", () => TOOLTIP.style("opacity",0))
+    .on("click", (ev,d) => {
+      if (useCompareSel) {
+        if (activeSelSet.has(d.id)) activeSelSet.delete(d.id);
+        else activeSelSet.add(d.id);
+        drawScatter();
+        drawBarChart();
+        renderComparacionCohortes();
+        return;
+      }
+      if (selectedIds.has(d.id)) {
+        selectedIds.delete(d.id);
+        if (lastClickedId === d.id) lastClickedId = selectedIds.size > 0 ? selectedIds.values().next().value : null;
+      } else {
+        selectedIds.add(d.id);
+        lastClickedId = d.id;
+      }
+      drawScatter();
+      drawBarChart();
+      drawParallelCoords();
+      updateDetails(selectedRecord());
+    });
+
+  // ── Selección por marquesina: arrastra un rectángulo para elegir varios ──
+  const marquee = d3.brush()
+    .extent([[MARGIN.l, MARGIN.t], [w - MARGIN.r, h - MARGIN.b]])
+    .on("end", (event) => {
+      if (!event.selection) return; // fue un clic simple, no un arrastre
+      const [[bx0, by0], [bx1, by1]] = event.selection;
+      const dentroDelArea = (id) => {
+        const idx = idToIdx.get(id);
+        if (idx === undefined) return false;
+        const px = xScale(coords[idx][0]);
+        const py = yScale(coords[idx][1]);
+        return px >= bx0 && px <= bx1 && py >= by0 && py <= by1;
+      };
+      let algunoNuevo = false;
+      datosBase.forEach(d => {
+        if (!dentroDelArea(d.id)) return;
+        if (useCompareSel) {
+          activeSelSet.add(d.id);
+          algunoNuevo = true;
+        } else if (visSet.has(idToIdx.get(d.id))) {
+          selectedIds.add(d.id);
+          lastClickedId = d.id;
+          algunoNuevo = true;
+        }
+      });
+      marqueeLayer.call(marquee.move, null); // borra el rectángulo dibujado
+      if (!algunoNuevo) return;
+      if (useCompareSel) {
+        drawScatter();
+        drawBarChart();
+        renderComparacionCohortes();
+      } else {
+        drawScatter();
+        drawBarChart();
+        drawParallelCoords();
+        updateDetails(selectedRecord());
+      }
+    });
+  marqueeLayer.call(marquee);
+  marqueeLayer.lower(); // asegura que quede por debajo de los puntos
+
+  // Etiqueta del último punto clicado
+  if (!useCompareSel && lastClickedId !== null) {
+    const selRec = DATA.registros.find(r => r.id === lastClickedId);
+    const selIdx = selRec ? DATA.registros.indexOf(selRec) : -1;
+    if (selIdx !== -1) {
+      const cx = xScale(coords[selIdx][0]);
+      const cy = yScale(coords[selIdx][1]);
+      const labelGroup = svg.append("g").attr("class", "selected-label");
+      const lines = [
+        `#${selRec.id} ${escapeHTML(selRec.ocupacion || "")}`,
+        `${escapeHTML(selRec.trastorno)} | ${escapeHTML(selRec.genero || "")} | ${formatValue(selRec.edad, "a")}`,
+        `Sueño: ${formatValue(selRec.duracion_sueno_horas, "h")} Cal: ${formatValue(selRec.calidad_sueno)}/10 Déf: ${formatValue(selRec.deficit_sueno, "h")}`,
+        `Estrés: ${formatValue(selRec.nivel_estres)}/10 IMC: ${escapeHTML(selRec.categoria_imc || "")} Salud: ${formatValue(selRec.puntaje_salud_sueno)}`
+      ];
+      const bbox = {w: 0, h: lines.length * 14 + 10};
+      lines.forEach(l => { const tw = l.length * 6.5; if (tw > bbox.w) bbox.w = tw; });
+      bbox.w = Math.min(bbox.w + 16, 240);
+      let lx = cx + 14, ly = cy - 8;
+      if (lx + bbox.w > w - MARGIN.r) lx = cx - bbox.w - 14;
+      if (ly + bbox.h > h - MARGIN.b) ly = h - MARGIN.b - bbox.h;
+      if (ly < MARGIN.t) ly = MARGIN.t;
+      labelGroup.append("rect")
+        .attr("x", lx).attr("y", ly)
+        .attr("width", bbox.w).attr("height", bbox.h)
+        .attr("rx", 4).attr("fill", "rgba(23,32,51,0.88)").attr("stroke", "#2f9c95").attr("stroke-width", 1.5);
+      lines.forEach((l, i) => {
+        labelGroup.append("text")
+          .attr("x", lx + 8).attr("y", ly + 14 + i * 14)
+          .attr("fill", "#fff").attr("font-size", "10px").attr("font-weight", i === 0 ? "700" : "400")
+          .text(l);
+      });
+    }
+  }
+
+  if (aplicarFiltroSeleccion) {
+    svg.append("text")
+      .attr("x", w / 2).attr("y", 14).attr("text-anchor", "middle")
+      .attr("font-size", "10px").attr("fill", "#2f9c95").attr("font-weight", "700")
+      .text(`🔗 Mostrando solo ${datosBase.length} seleccionados en Cuadrante 1`);
+  }
+
+  if (varExpContainerId) {
+    let varExpText = "";
+    if (tech === "pca" && DATA.pca.varianza_explicada) {
+      const v = DATA.pca.varianza_explicada;
+      varExpText = `PCA - varianza explicada: PC1=${(v[0]*100).toFixed(1)}%, PC2=${(v[1]*100).toFixed(1)}%`;
+    } else if (tech === "mds") {
+      varExpText = "MDS - Escalamiento Multidimensional: preserva distancias euclídeas entre pares de puntos.";
+    }
+    document.getElementById(varExpContainerId).textContent = varExpText;
+  }
+}
+
+function drawScatter() {
+  drawScatterInContainer("scatter-container", "select-tech", "var-exp-container", "A");
+}
+
+function drawBarChart() {
+  drawScatterInContainer("bar-container", "select-bar-tech", null, "B");
+}
+
+/* ── Gráfico de Coordenadas Paralelas ── */
+const PC_DIMS = [
+  { key: "edad",                   label: "Edad" },
+  { key: "duracion_sueno_horas",   label: "Sueño (h)" },
+  { key: "calidad_sueno",          label: "Calidad" },
+  { key: "deficit_sueno",          label: "Déficit" },
+  { key: "eficiencia_sueno",      label: "Eficiencia" },
+  { key: "puntaje_salud_sueno",   label: "Salud sueño" },
+  { key: "nivel_estres",           label: "Estrés" },
+  { key: "nivel_actividad_fisica", label: "Actividad" },
+  { key: "frecuencia_cardiaca",    label: "FC (bpm)" },
+  { key: "pasos_diarios",          label: "Pasos" },
+];
+
+// Paleta colores para género
+const COLORES_GENERO = { "Hombre": "#4a7fcf", "Mujer": "#c7568a" };
+
+// Brushes por eje (para filtrar por rango)
+let pcBrushes = {};
+let pcBrushExtents = {};
+
+/* ========== Mejoras UX: selección, leyenda fija, informe PDF y tour ========== */
+
+/* --- Barra de selección (contador + limpiar) --- */
+function actualizarBarraSeleccion() {
+  const bar = document.getElementById("sel-toolbar");
+  const cnt = document.getElementById("sel-count");
+  if (!bar || !cnt) return;
+  const n = selectedIds.size;
+  if (n > 0) { bar.style.display = "inline-flex"; cnt.textContent = n + (n === 1 ? " seleccionado" : " seleccionados"); }
+  else { bar.style.display = "none"; }
+}
+function limpiarSeleccion() {
+  selectedIds.clear();
+  lastClickedId = null;
+  drawScatter(); drawBarChart(); drawParallelCoords();
+  updateDetails(selectedRecord());
+}
+
+/* --- Leyenda fija (forma + color por trastorno) --- */
+function drawFixedLegend() {
+  const c = document.getElementById("fixed-legend");
+  if (!c || !DATA || !DATA.colores_trastorno) return;
+  const items = Object.entries(DATA.colores_trastorno).map(([label, color]) =>
+    '<span class="fl-item">' + legendShapeSvg(shapeForTrastorno(label), color) + escapeHTML(label) + '</span>').join("");
+  c.innerHTML = '<span class="fl-title">Trastorno · forma + color</span>' + items;
+}
+
+/* --- SVG -> PNG (para el informe PDF) --- */
+function svgToPngDataURL(containerId, scale) {
+  scale = scale || 2;
+  return new Promise((resolve, reject) => {
+    const container = document.getElementById(containerId);
+    const svgEl = container ? container.querySelector("svg") : null;
+    if (!svgEl) { reject(new Error("sin svg")); return; }
+    const clone = svgEl.cloneNode(true);
+    clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    bg.setAttribute("width", "100%"); bg.setAttribute("height", "100%"); bg.setAttribute("fill", "#ffffff");
+    clone.insertBefore(bg, clone.firstChild);
+    const wAttr = parseFloat(svgEl.getAttribute("width")) || svgEl.clientWidth || 600;
+    const hAttr = parseFloat(svgEl.getAttribute("height")) || svgEl.clientHeight || 400;
+    const data = new XMLSerializer().serializeToString(clone);
+    const url = URL.createObjectURL(new Blob([data], { type: "image/svg+xml;charset=utf-8" }));
+    const img = new Image();
+    img.onload = () => {
+      const cv = document.createElement("canvas");
+      cv.width = wAttr * scale; cv.height = hAttr * scale;
+      const ctx = cv.getContext("2d");
+      ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, cv.width, cv.height);
+      ctx.drawImage(img, 0, 0, cv.width, cv.height);
+      URL.revokeObjectURL(url);
+      resolve(cv.toDataURL("image/png"));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("img")); };
+    img.src = url;
+  });
+}
+
+/* --- Informe PDF de la sesión --- */
+async function exportarInformePDF() {
+  if (!DATA) { alert("Los datos aún se están cargando."); return; }
+  const win = window.open("", "_blank");
+  if (!win) { alert("Permite las ventanas emergentes para generar el informe PDF."); return; }
+  win.document.write("<!doctype html><meta charset='utf-8'><title>Informe</title><body style='font-family:system-ui,Arial;padding:20px;color:#172033'>Generando informe…</body>");
+
+  const fecha = new Date().toLocaleString("es-PE");
+  const total = DATA.registros.length;
+  const visible = filteredIndices().length;
+  const f = filterState || {};
+  const sel = selectedRecords();
+
+  let met = null;
+  try { met = await fetch("/api/metodologia").then(r => r.ok ? r.json() : null); } catch (e) {}
+  let scatterImg = "";
+  try { scatterImg = await svgToPngDataURL("scatter-container"); } catch (e) {}
+  let pcImg = "";
+  try { pcImg = await svgToPngDataURL("hist-container"); } catch (e) {}
+
+  const filtrosHtml =
+    '<ul>' +
+    '<li><b>Trastornos:</b> ' + ((f.trastorno || []).map(escapeHTML).join(", ") || "—") + '</li>' +
+    '<li><b>Género:</b> ' + ((f.genero || []).map(escapeHTML).join(", ") || "—") + '</li>' +
+    '<li><b>Anomalía IQR:</b> ' + escapeHTML(f.anomalia || "all") + '</li>' +
+    '<li><b>Edad:</b> ' + f.edadMin + '–' + f.edadMax + ' · <b>Calidad sueño:</b> ' + f.calidadMin + '–' + f.calidadMax + '</li>' +
+    '</ul>';
+
+  const cohorteHtml = sel.length === 0
+    ? '<p><i>No hay pacientes seleccionados en esta sesión.</i></p>'
+    : '<p>' + sel.length + ' paciente(s) seleccionado(s):</p>' +
+      '<table><thead><tr><th>ID</th><th>Trastorno</th><th>Edad</th><th>Sueño (h)</th><th>Calidad</th><th>Estrés</th><th>Salud</th></tr></thead><tbody>' +
+      sel.map(r => '<tr><td>' + r.id + '</td><td>' + escapeHTML(r.trastorno) + '</td><td>' + formatValue(r.edad) + '</td><td>' + formatValue(r.duracion_sueno_horas) + '</td><td>' + formatValue(r.calidad_sueno) + '</td><td>' + formatValue(r.nivel_estres) + '</td><td>' + formatValue(r.puntaje_salud_sueno) + '</td></tr>').join("") +
+      '</tbody></table>';
+
+  let metHtml = '<p><i>Metodología no disponible.</i></p>';
+  if (met && met.pca_vivo) {
+    metHtml = '<ul>' +
+      '<li><b>PCA:</b> ' + met.pca_vivo.n_muestras + ' muestras · ' + met.pca_vivo.n_features + ' atributos · Var. total ' + (met.pca_vivo.varianza_total*100).toFixed(1) + '% (PC1 ' + (met.pca_vivo.varianza_pc1*100).toFixed(1) + '%, PC2 ' + (met.pca_vivo.varianza_pc2*100).toFixed(1) + '%)</li>' +
+      '<li><b>t-SNE:</b> perplexity=' + met.tsne.perplexity + ', max_iter=' + met.tsne.max_iter + ' · <b>UMAP:</b> n_neighbors=' + met.umap.n_neighbors + ', min_dist=' + met.umap.min_dist + ' · <b>MDS:</b> ' + escapeHTML(met.mds.dissimilarity) + '</li>' +
+      (met.kmeans ? '<li><b>K-Means:</b> k=' + met.kmeans.k_optimo + ' · silueta ' + met.kmeans.silueta_promedio + ' · n=' + met.kmeans.n_muestras + '</li>' : "") +
+      (met.dbscan ? '<li><b>DBSCAN:</b> eps=' + ((met.dbscan.parametros||{}).eps != null ? met.dbscan.parametros.eps : "—") + ', min_samples=' + ((met.dbscan.parametros||{}).min_samples != null ? met.dbscan.parametros.min_samples : "—") + ' · ' + met.dbscan.n_clusters + ' clusters · ' + met.dbscan.n_anomalias + ' anomalías (' + met.dbscan.porcentaje_anomalias + '%)</li>' : "") +
+      '</ul>';
+  }
+
+  const estilo = '*{box-sizing:border-box}body{font-family:system-ui,Arial;color:#172033;margin:0;padding:28px;line-height:1.5}h1{font-size:20px;margin:0 0 2px}h2{font-size:14px;margin:20px 0 6px;color:#2f6f9f;border-bottom:1px solid #e6e5e3;padding-bottom:3px}.muted{color:#687386;font-size:12px}ul{margin:4px 0;padding-left:18px;font-size:12px}li{margin:2px 0}table{border-collapse:collapse;width:100%;font-size:11px;margin-top:6px}th,td{border:1px solid #dce3ec;padding:4px 6px;text-align:center}th{background:#eef2f6}img{max-width:100%;border:1px solid #e6e5e3;border-radius:6px;margin-top:6px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.note{font-size:10px;color:#9aa5b1;margin-top:6px}@media print{body{padding:0}}';
+
+  const html = '<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Informe de sesión — Espacio Latente Sleep Health</title><style>' + estilo + '</style></head><body>' +
+    '<h1>Informe de sesión — Espacio Latente · Sleep Health</h1>' +
+    '<div class="muted">Generado ' + escapeHTML(fecha) + ' · ' + visible + '/' + total + ' usuarios visibles · ' + DATA.feature_cols.length + ' dimensiones → 2D</div>' +
+    '<h2>1. Filtros aplicados</h2>' + filtrosHtml +
+    '<h2>2. Cohorte seleccionada</h2>' + cohorteHtml +
+    '<h2>3. Vistas del espacio latente</h2><div class="grid2">' +
+    '<div>' + (scatterImg ? '<div class="muted">Cuadrante 1 — Espacio latente</div><img src="' + scatterImg + '">' : "") + '</div>' +
+    '<div>' + (pcImg ? '<div class="muted">Cuadrante 3 — Coordenadas paralelas</div><img src="' + pcImg + '">' : "") + '</div></div>' +
+    '<h2>4. Ficha de metodología</h2>' + metHtml +
+    '<p class="note">Herramienta orientativa de apoyo al análisis; no constituye diagnóstico clínico.</p>' +
+    '</body></html>';
+
+  win.document.open(); win.document.write(html); win.document.close();
+  setTimeout(() => { try { win.focus(); win.print(); } catch (e) {} }, 800);
+}
+
+/* --- Tour guiado --- */
+function cerrarModales() {
+  ["ml-panel", "cluster-panel", "dbscan-panel", "eval-panel"].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.display = "none";
+  });
+}
+const TOUR_STEPS = [
+  { sel: null, titulo: "\U0001F393 Recorrido guiado", html: "Este dashboard recorre el <b>ciclo completo de minería de datos (KDD)</b> sobre 374 personas y demuestra <b>4 patrones</b> más un caso de uso real. Usa <b>Siguiente</b> para avanzar." },
+  { sel: "#quad-scatter", titulo: "Espacio latente (reducción de dimensionalidad)", html: "Cuadrante 1: proyección 2D con <b>PCA / t-SNE / UMAP / MDS</b>. <b>Arrastra</b> para seleccionar una cohorte (marquesina) o haz clic en puntos." },
+  { sel: "#quad-bar", titulo: "Vista comparativa", html: "Cuadrante 2: la misma proyección con otra técnica, para contrastar la estructura y comprobar que los grupos son estables." },
+  { sel: "#quad-hist", titulo: "Coordenadas paralelas", html: "Cuadrante 3: patrón multivariado; cada línea es una persona a través de todas las variables de sueño/salud." },
+  { sel: "#quad-details", titulo: "Explicabilidad", html: "Cuadrante 4: <b>perfiles</b>, <b>alertas clínicas</b>, <b>comparación de cohortes</b> e <b>investigación</b> (metodología, loadings PCA, importancia de atributos)." },
+  { onEnter: () => { cerrarModales(); loadClustering(); }, sel: null, titulo: "Patrón 1 — Clustering (K-Means)", html: "Segmentación no supervisada en <b>fenotipos clínicos del sueño</b> (criterios ICSD-3). k=7, silueta 0.58." },
+  { onEnter: () => { cerrarModales(); loadDbscan(); }, sel: null, titulo: "Patrón 2 — Detección de anomalías (DBSCAN)", html: "Clustering por densidad; identifica <b>77 casos atípicos</b> (20.6%) que no encajan en ningún grupo denso." },
+  { onEnter: () => { cerrarModales(); switchTab("insights"); }, sel: "#quad-details", titulo: "Patrón 3 — Análisis de correlación / contraste", html: "En el Cuadrante 4, las pestañas <b>Insights</b> y <b>Comparar</b> revelan qué variables separan a las cohortes (p. ej. estrés ↔ insomnio)." },
+  { onEnter: () => { cerrarModales(); loadMLResults(); }, sel: null, titulo: "Patrón 4 — Modelo predictivo (Pipeline ML)", html: "Early Warning System con GradientBoosting: <b>accuracy 0.88, AUC 0.934</b>, más un motor de reglas clínicas." },
+  { onEnter: () => cerrarModales(), sel: "#quad-scatter", titulo: "Walkthrough — cómo se usa", html: "Flujo real: <b>pregunta → vista → patrón → insight</b>. 1) Arrastra una cohorte en el Cuadrante 1. 2) Compárala en el Cuadrante 4. 3) Revisa alertas y fenotipo. 4) Exporta el <b>Informe PDF</b>. ¡Listo para explorar!" },
+];
+let tourIndex = 0;
+function iniciarTour() {
+  crearOverlayTour();
+  tourIndex = 0;
+  document.getElementById("tour-overlay").style.display = "block";
+  renderTourStep();
+}
+function cerrarTour() {
+  document.querySelectorAll(".tour-highlight").forEach(el => el.classList.remove("tour-highlight"));
+  const o = document.getElementById("tour-overlay"); if (o) o.style.display = "none";
+}
+function tourNav(delta) {
+  tourIndex = Math.max(0, Math.min(TOUR_STEPS.length - 1, tourIndex + delta));
+  renderTourStep();
+}
+function renderTourStep() {
+  const step = TOUR_STEPS[tourIndex];
+  document.querySelectorAll(".tour-highlight").forEach(el => el.classList.remove("tour-highlight"));
+  if (step.onEnter) { try { step.onEnter(); } catch (e) {} }
+  if (step.sel) {
+    const target = document.querySelector(step.sel);
+    if (target) { target.classList.add("tour-highlight"); target.scrollIntoView({ behavior: "smooth", block: "center" }); }
+  }
+  document.getElementById("tour-titulo").innerHTML = step.titulo;
+  document.getElementById("tour-texto").innerHTML = step.html;
+  document.getElementById("tour-progreso").textContent = (tourIndex + 1) + " / " + TOUR_STEPS.length;
+  document.getElementById("tour-prev").disabled = tourIndex === 0;
+  document.getElementById("tour-next").textContent = tourIndex === TOUR_STEPS.length - 1 ? "Finalizar ✓" : "Siguiente ▶";
+}
+function crearOverlayTour() {
+  if (document.getElementById("tour-overlay")) return;
+  const o = document.createElement("div");
+  o.id = "tour-overlay";
+  o.innerHTML = '<div id="tour-box">' +
+    '<button id="tour-close" onclick="cerrarTour()" title="Cerrar">&times;</button>' +
+    '<div id="tour-titulo"></div><div id="tour-texto"></div>' +
+    '<div id="tour-footer"><span id="tour-progreso"></span><span>' +
+    '<button id="tour-prev" onclick="tourNav(-1)">◀ Anterior</button>' +
+    '<button id="tour-next" onclick="if(tourIndex===TOUR_STEPS.length-1){cerrarTour();}else{tourNav(1);}">Siguiente ▶</button>' +
+    '</span></div></div>';
+  document.body.appendChild(o);
+}
+
+function exportQuadPNG(containerId, filename) {
+  const container = document.getElementById(containerId);
+  const svgEl = container ? container.querySelector("svg") : null;
+  if (!svgEl) { alert("No hay gráfico para exportar todavía."); return; }
+  const svgClone = svgEl.cloneNode(true);
+  svgClone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  const bgRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  bgRect.setAttribute("x", "0"); bgRect.setAttribute("y", "0");
+  bgRect.setAttribute("width", "100%"); bgRect.setAttribute("height", "100%");
+  bgRect.setAttribute("fill", "#ffffff");
+  svgClone.insertBefore(bgRect, svgClone.firstChild);
+  const wAttr = parseFloat(svgEl.getAttribute("width")) || svgEl.clientWidth || 600;
+  const hAttr = parseFloat(svgEl.getAttribute("height")) || svgEl.clientHeight || 400;
+  const svgData = new XMLSerializer().serializeToString(svgClone);
+  const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(svgBlob);
+  const img = new Image();
+  img.onload = function () {
+    const scale = 2;
+    const canvas = document.createElement("canvas");
+    canvas.width = wAttr * scale;
+    canvas.height = hAttr * scale;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    URL.revokeObjectURL(url);
+    canvas.toBlob(function (blob) {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    });
+  };
+  img.onerror = function () { URL.revokeObjectURL(url); alert("No se pudo exportar la imagen."); };
+  img.src = url;
+}
+
+function getPCColor(record) {
+  const mode = document.getElementById("select-pc-color").value;
+  if (mode === "genero") return COLORES_GENERO[record.genero] || "#888";
+  return DATA.colores_trastorno[record.trastorno] || "#888";
+}
+
+function drawParallelCoords() {
+  const container = document.getElementById("hist-container");
+  const rect = container.getBoundingClientRect();
+  const w = rect.width || 600;
+  const h = rect.height || 300;
+  container.innerHTML = "";
+
+  const mPC = { t: 36, r: 20, b: 20, l: 20 };
+  const innerW = w - mPC.l - mPC.r;
+  const innerH = h - mPC.t - mPC.b;
+
+  const visIdx = new Set(filteredIndices());
+  const allRecords = DATA.registros;
+  let visRecords = allRecords.filter((_, i) => visIdx.has(i));
+  const aplicarFiltroSeleccionPC = filtrarPorSeleccionActivo && selectedIds.size > 0;
+  if (aplicarFiltroSeleccionPC) {
+    visRecords = visRecords.filter(d => selectedIds.has(d.id));
+  }
+
+  if (visRecords.length === 0) {
+    container.innerHTML = '<div class="hint">No hay datos con los filtros actuales.</div>';
+    return;
+  }
+
+  // Escalas por dimensión (usando todos los datos para dominio estable)
+  const yScales = {};
+  PC_DIMS.forEach(dim => {
+    const vals = allRecords.map(r => r[dim.key]).filter(v => v != null && !isNaN(v));
+    yScales[dim.key] = d3.scaleLinear()
+      .domain(d3.extent(vals))
+      .range([innerH, 0])
+      .nice();
+  });
+
+  // Escala X: posición de cada eje
+  const xScale = d3.scalePoint()
+    .domain(PC_DIMS.map(d => d.key))
+    .range([0, innerW])
+    .padding(0.1);
+
+  const svg = d3.select(container).append("svg")
+    .attr("width", w).attr("height", h)
+    .style("font-family", "'Segoe UI', Arial, sans-serif");
+
+  if (aplicarFiltroSeleccionPC) {
+    svg.append("text")
+      .attr("x", w / 2).attr("y", 14).attr("text-anchor", "middle")
+      .attr("font-size", "10px").attr("fill", "#2f9c95").attr("font-weight", "700")
+      .text(`🔗 Mostrando solo ${visRecords.length} seleccionados en Cuadrante 1`);
+  }
+
+  const g = svg.append("g").attr("transform", `translate(${mPC.l},${mPC.t + (aplicarFiltroSeleccionPC ? 10 : 0)})`);
+
+  // Generador de líneas
+  function linePath(d) {
+    const points = PC_DIMS
+      .filter(dim => d[dim.key] != null && !isNaN(d[dim.key]))
+      .map(dim => [xScale(dim.key), yScales[dim.key](d[dim.key])]);
+    return points.length >= 2 ? d3.line()(points) : null;
+  }
+
+  // Función para saber si un registro pasa los brushes activos
+  function passesPC(d) {
+    return PC_DIMS.every(dim => {
+      const ext = pcBrushExtents[dim.key];
+      if (!ext) return true;
+      const v = d[dim.key];
+      if (v == null) return false;
+      const [lo, hi] = [yScales[dim.key].invert(ext[1]), yScales[dim.key].invert(ext[0])];
+      return v >= lo && v <= hi;
+    });
+  }
+
+  const hasSelection = selectedIds.size > 0;
+  const hasBrush = Object.keys(pcBrushExtents).length > 0;
+
+  // Fondo gris para orientar
+  g.append("rect")
+    .attr("x", 0).attr("y", 0)
+    .attr("width", innerW).attr("height", innerH)
+    .attr("fill", "#f7f9fc").attr("rx", 4);
+
+  // Grupo de líneas no seleccionadas
+  g.append("g").attr("class", "pc-lines-bg")
+    .selectAll("path")
+    .data(visRecords.filter(d => !selectedIds.has(d.id)))
+    .join("path")
+    .attr("d", linePath)
+    .attr("fill", "none")
+    .attr("stroke", d => getPCColor(d))
+    .attr("stroke-width", 1)
+    .attr("opacity", d => {
+      if (hasBrush && !passesPC(d)) return 0.04;
+      return hasSelection ? 0.15 : 0.38;
+    })
+    .style("cursor", "pointer")
+    .on("mouseenter", (ev, d) => {
+      TOOLTIP.style("opacity", 1).html(
+        `<strong>Empleado #${d.id}</strong> · ${escapeHTML(d.trastorno)}<br>` +
+        `${escapeHTML(d.ocupacion || "Sin ocupacion")}<br>` +
+        `Edad: ${formatValue(d.edad, " años")} · Sueño: ${formatValue(d.duracion_sueno_horas, " h")} · Cal: ${formatValue(d.calidad_sueno)}/10<br>` +
+        `Estrés: ${formatValue(d.nivel_estres)}/10 · Déficit: ${formatValue(d.deficit_sueno, " h")} · Salud: ${formatValue(d.puntaje_salud_sueno)}`
+      );
+    })
+    .on("mousemove", ev => TOOLTIP.style("left", (ev.pageX+12)+"px").style("top", (ev.pageY-10)+"px"))
+    .on("mouseleave", () => TOOLTIP.style("opacity", 0))
+    .on("click", (ev, d) => {
+      selectedIds.add(d.id);
+      lastClickedId = d.id;
+      drawScatter(); drawBarChart(); drawParallelCoords();
+      updateDetails(selectedRecord());
+    });
+
+  // Grupo de líneas seleccionadas (encima)
+  g.append("g").attr("class", "pc-lines-sel")
+    .selectAll("path")
+    .data(visRecords.filter(d => selectedIds.has(d.id)))
+    .join("path")
+    .attr("d", linePath)
+    .attr("fill", "none")
+    .attr("stroke", d => getPCColor(d))
+    .attr("stroke-width", 2.5)
+    .attr("opacity", 1)
+    .style("cursor", "pointer")
+    .on("mouseenter", (ev, d) => {
+      TOOLTIP.style("opacity", 1).html(
+        `<strong>✔ Empleado #${d.id}</strong> · ${escapeHTML(d.trastorno)}<br>` +
+        `${escapeHTML(d.ocupacion || "Sin ocupacion")}<br>` +
+        `Edad: ${formatValue(d.edad, " años")} · Sueño: ${formatValue(d.duracion_sueno_horas, " h")} · Cal: ${formatValue(d.calidad_sueno)}/10<br>` +
+        `Estrés: ${formatValue(d.nivel_estres)}/10 · Déficit: ${formatValue(d.deficit_sueno, " h")} · Salud: ${formatValue(d.puntaje_salud_sueno)}`
+      );
+    })
+    .on("mousemove", ev => TOOLTIP.style("left", (ev.pageX+12)+"px").style("top", (ev.pageY-10)+"px"))
+    .on("mouseleave", () => TOOLTIP.style("opacity", 0))
+    .on("click", (ev, d) => {
+      selectedIds.delete(d.id);
+      if (lastClickedId === d.id) lastClickedId = selectedIds.size > 0 ? selectedIds.values().next().value : null;
+      drawScatter(); drawBarChart(); drawParallelCoords();
+      updateDetails(selectedRecord());
+    });
+
+  // Perfil promedio por grupo (linea agregada resaltada)
+  const pcGroupField = document.getElementById("select-pc-color").value;
+  const pcGroups = {};
+  visRecords.forEach(d => {
+    const key = pcGroupField === "genero" ? d.genero : d.trastorno;
+    if (key == null) return;
+    if (!pcGroups[key]) pcGroups[key] = [];
+    pcGroups[key].push(d);
+  });
+  const avgProfiles = Object.entries(pcGroups).map(([key, recs]) => {
+    const avg = { __label: key, __n: recs.length };
+    PC_DIMS.forEach(dim => {
+      const vals = recs.map(r => r[dim.key]).filter(v => v != null && !isNaN(v));
+      avg[dim.key] = vals.length ? d3.mean(vals) : null;
+    });
+    return avg;
+  });
+  const avgColor = d => pcGroupField === "genero" ? (COLORES_GENERO[d.__label] || "#111827") : (DATA.colores_trastorno[d.__label] || "#111827");
+
+  g.append("g").attr("class", "pc-lines-avg")
+    .selectAll("path")
+    .data(avgProfiles)
+    .join("path")
+    .attr("d", linePath)
+    .attr("fill", "none")
+    .attr("stroke", avgColor)
+    .attr("stroke-width", 4)
+    .attr("stroke-linecap", "round")
+    .attr("stroke-linejoin", "round")
+    .attr("opacity", 0.95)
+    .style("pointer-events", "none")
+    .style("filter", "drop-shadow(0 0 1.5px rgba(255,255,255,0.95))");
+
+  if (PC_DIMS.length > 0) {
+    const lastDim = PC_DIMS[PC_DIMS.length - 1];
+    g.append("g").attr("class", "pc-avg-labels")
+      .selectAll("text")
+      .data(avgProfiles.filter(d => d[lastDim.key] != null))
+      .join("text")
+      .attr("x", xScale(lastDim.key) + 6)
+      .attr("y", d => yScales[lastDim.key](d[lastDim.key]))
+      .attr("dy", "0.32em")
+      .attr("font-size", "9px")
+      .attr("font-weight", "700")
+      .style("pointer-events", "none")
+      .attr("fill", avgColor)
+      .text(d => `─ ${d.__label} (n=${d.__n})`);
+  }
+
+  // Ejes y brushes
+  PC_DIMS.forEach(dim => {
+    const x = xScale(dim.key);
+    const axisG = g.append("g")
+      .attr("class", "pc-axis")
+      .attr("transform", `translate(${x},0)`);
+
+    // Línea del eje
+    axisG.append("line")
+      .attr("y1", 0).attr("y2", innerH)
+      .attr("stroke", "#b0b8c8").attr("stroke-width", 1.5);
+
+    // Ticks
+    const axis = d3.axisLeft(yScales[dim.key]).ticks(5);
+    axisG.call(axis)
+      .selectAll("text")
+      .attr("font-size", "8px")
+      .attr("fill", "#687386");
+    axisG.select(".domain").remove();
+    axisG.selectAll(".tick line").attr("stroke", "#dce3ec");
+
+    // Etiqueta del eje
+    axisG.append("text")
+      .attr("y", -10)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "9px")
+      .attr("font-weight", "700")
+      .attr("fill", pcBrushExtents[dim.key] ? "#2f9c95" : "#354052")
+      .text(dim.label);
+
+    // Brush por eje
+    const brushHeight = innerH;
+    const br = d3.brushY()
+      .extent([[-8, 0], [8, brushHeight]])
+      .on("brush end", (event) => {
+        if (event.selection) {
+          pcBrushExtents[dim.key] = event.selection;
+        } else {
+          delete pcBrushExtents[dim.key];
+        }
+        drawParallelCoords();
+      });
+
+    const brG = axisG.append("g").attr("class", "brush").call(br);
+    if (pcBrushExtents[dim.key]) {
+      brG.call(br.move, pcBrushExtents[dim.key]);
+    }
+    brG.selectAll("rect")
+      .attr("fill", "#2f9c95")
+      .attr("opacity", 0.18);
+  });
+
+  // Botón reset brushes (si hay alguno activo)
+  if (hasBrush) {
+    svg.append("text")
+      .attr("x", w - mPC.r)
+      .attr("y", mPC.t - 20)
+      .attr("text-anchor", "end")
+      .attr("font-size", "9px")
+      .attr("fill", "#2f9c95")
+      .attr("font-weight", "700")
+      .style("cursor", "pointer")
+      .text("✕ Limpiar filtros")
+      .on("click", () => {
+        pcBrushExtents = {};
+        drawParallelCoords();
+      });
+  }
+
+  // Contador de registros que pasan los brushes
+  const passingCount = visRecords.filter(d => passesPC(d)).length;
+  if (hasBrush) {
+    svg.append("text")
+      .attr("x", mPC.l)
+      .attr("y", mPC.t - 20)
+      .attr("font-size", "9px")
+      .attr("fill", "#687386")
+      .text(`${passingCount} de ${visRecords.length} en rango`);
+  }
+}
+
+/* ── Alertas clínicas ── */
+function renderAlertas(alertas) {
+  const ICONO = {peligro:"🚨", advertencia:"⚠️", info:"ℹ️"};
+  if (!alertas || alertas.length === 0) {
+    return `<div class="alerta-box ok"><span class="alerta-icono">✅</span><div><span class="alerta-titulo">Sin factores de riesgo detectados</span>No se identificaron patrones clínicos de riesgo en las variables vitales de este empleado.</div></div>`;
+  }
+  return alertas.map(a => `
+    <div class="alerta-box ${a.tipo}">
+      <span class="alerta-icono">${ICONO[a.tipo] || "⚠️"}</span>
+      <div>
+        <span class="alerta-titulo">${escapeHTML(a.titulo)}</span>
+        ${escapeHTML(a.mensaje)}
+        <div class="alerta-rec">💡 ${escapeHTML(a.recomendacion)}</div>
+      </div>
+    </div>`).join("");
+}
+
+function renderProfileCard(record) {
+  const anomalyClass = Number(record.tiene_anomalia_iqr) === 1 ? "status-chip warning" : "status-chip";
+  const anomalyText = Number(record.tiene_anomalia_iqr) === 1 ? "Con anomalia IQR" : "Sin anomalias IQR";
+  return `
+    <div class="profile-card">
+      <div class="profile-head">
+        <div>
+          <span class="detail-kicker">Empleado #${record.id_persona}</span>
+          <h4>${escapeHTML(record.ocupacion || "Ocupacion sin dato")}</h4>
+        </div>
+        <span class="badge ${badgeClass(record.trastorno)}">${escapeHTML(record.trastorno || "Sin dato")}</span>
+      </div>
+      <div class="profile-grid">
+        <div class="profile-field"><span>Edad</span><strong>${formatValue(record.edad, " años")}</strong></div>
+        <div class="profile-field"><span>Género</span><strong>${formatValue(record.genero)}</strong></div>
+        <div class="profile-field"><span>Horas de sueño</span><strong>${formatValue(record.duracion_sueno_horas, " h")}</strong></div>
+        <div class="profile-field"><span>Calidad sueño</span><strong>${formatValue(record.calidad_sueno, " / 10")}</strong></div>
+        <div class="profile-field"><span>Nivel de estrés</span><strong>${formatValue(record.nivel_estres, " / 10")}</strong></div>
+        <div class="profile-field"><span>Actividad física</span><strong>${formatValue(record.nivel_actividad_fisica, " min/día")}</strong></div>
+        <div class="profile-field"><span>Presión arterial</span><strong>${formatValue(record.presion_arterial)}</strong></div>
+        <div class="profile-field"><span>Frecuencia cardíaca</span><strong>${formatValue(record.frecuencia_cardiaca, " bpm")}</strong></div>
+        <div class="profile-field"><span>Pasos diarios</span><strong>${formatValue(record.pasos_diarios)}</strong></div>
+        <div class="profile-field"><span>Categoría IMC</span><strong>${formatValue(record.categoria_imc)}</strong></div>
+        <div class="profile-field" style="background:#eef7f0"><span>Salud sueño</span><strong>${formatValue(record.puntaje_salud_sueno, " / 10")}</strong></div>
+        <div class="profile-field" style="background:#f7f0ee"><span>Déficit sueño</span><strong>${formatValue(record.deficit_sueno, " h")}</strong></div>
+      </div>
+      <div class="status-row">
+        <span class="status-chip">Sueño ${formatValue(record.calidad_sueno_nivel).toLowerCase()}</span>
+        <span class="status-chip">Estrés ${formatValue(record.estres_nivel).toLowerCase()}</span>
+        <span class="status-chip" style="background:#e0f0e8;color:#1a6f4a">Eficiencia ${formatValue(record.eficiencia_sueno, "")}</span>
+        <span class="${anomalyClass}">${anomalyText}</span>
+      </div>
+    </div>`;
+}
+
+function initCohortSelectors() {
+  const selA = document.getElementById("cohorte-a-select");
+  const selB = document.getElementById("cohorte-b-select");
+  if (!selA || !selB || !DATA) return;
+  const trastornos = Object.keys(DATA.colores_trastorno || {});
+  const opts = trastornos.map(t => `<option value="${escapeHTML(t)}">${escapeHTML(t)}</option>`).join("");
+  selA.innerHTML = opts;
+  selB.innerHTML = opts;
+  if (trastornos.length > 1) {
+    selA.value = trastornos[1];
+    selB.value = trastornos[0];
+  }
+  renderComparacionCohortes();
+}
+
+function setModoComparacion(modo) {
+  manualCompareMode = (modo === "manual");
+  const catControls = document.getElementById("comparacion-categoria-controls");
+  const manualControls = document.getElementById("comparacion-manual-controls");
+  if (catControls) catControls.style.display = manualCompareMode ? "none" : "flex";
+  if (manualControls) manualControls.style.display = manualCompareMode ? "block" : "none";
+  drawScatter();
+  drawBarChart();
+  renderComparacionCohortes();
+}
+
+function limpiarSeleccionManual() {
+  groupASelection.clear();
+  groupBSelection.clear();
+  drawScatter();
+  drawBarChart();
+  renderComparacionCohortes();
+}
+
+/* ── Pruebas de significancia estadística (t de Welch) ── */
+function logGamma(x) {
+  const g = 7;
+  const p = [0.99999999999980993, 676.5203681218851, -1259.1392167224028,
+    771.32342877765313, -176.61502916214059, 12.507343278686905,
+    -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+  if (x < 0.5) return Math.log(Math.PI / Math.sin(Math.PI * x)) - logGamma(1 - x);
+  x -= 1;
+  let a = p[0];
+  const t = x + g + 0.5;
+  for (let i = 1; i < g + 2; i++) a += p[i] / (x + i);
+  return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
+}
+
+function betacf(x, a, b) {
+  const MAXIT = 200, EPS = 3e-7, FPMIN = 1e-30;
+  const qab = a + b, qap = a + 1, qam = a - 1;
+  let c = 1, d = 1 - qab * x / qap;
+  if (Math.abs(d) < FPMIN) d = FPMIN;
+  d = 1 / d;
+  let h = d;
+  for (let m = 1; m <= MAXIT; m++) {
+    const m2 = 2 * m;
+    let aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+    d = 1 + aa * d; if (Math.abs(d) < FPMIN) d = FPMIN;
+    c = 1 + aa / c; if (Math.abs(c) < FPMIN) c = FPMIN;
+    d = 1 / d; h *= d * c;
+    aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+    d = 1 + aa * d; if (Math.abs(d) < FPMIN) d = FPMIN;
+    c = 1 + aa / c; if (Math.abs(c) < FPMIN) c = FPMIN;
+    d = 1 / d;
+    const del = d * c; h *= del;
+    if (Math.abs(del - 1) < EPS) break;
+  }
+  return h;
+}
+
+function betai(x, a, b) {
+  if (x <= 0) return 0;
+  if (x >= 1) return 1;
+  const bt = Math.exp(logGamma(a + b) - logGamma(a) - logGamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+  if (x < (a + 1) / (a + b + 2)) return bt * betacf(x, a, b) / a;
+  return 1 - bt * betacf(1 - x, b, a) / b;
+}
+
+function pValueFromT(t, df) {
+  if (!isFinite(t) || df <= 0) return null;
+  const x = df / (df + t * t);
+  return betai(x, df / 2, 0.5);
+}
+
+function welchTTest(a, b) {
+  const nA = a.length, nB = b.length;
+  if (nA < 2 || nB < 2) return null;
+  const meanA = d3.mean(a), meanB = d3.mean(b);
+  const varA = d3.variance(a), varB = d3.variance(b);
+  if (varA == null || varB == null) return null;
+  const seA2 = varA / nA, seB2 = varB / nB;
+  if (seA2 + seB2 === 0) return null;
+  const t = (meanA - meanB) / Math.sqrt(seA2 + seB2);
+  const df = Math.pow(seA2 + seB2, 2) / ((seA2 * seA2) / (nA - 1) + (seB2 * seB2) / (nB - 1));
+  const p = pValueFromT(t, df);
+  return { t, df, p };
+}
+
+function formatPValor(p) {
+  if (p == null || isNaN(p)) return { text: "—", stars: "", significant: false };
+  let stars = "ns";
+  if (p < 0.001) stars = "✱✱✱";
+  else if (p < 0.01) stars = "✱✱";
+  else if (p < 0.05) stars = "✱";
+  const text = p < 0.001 ? "<0.001" : p.toFixed(3);
+  return { text, stars, significant: p < 0.05 };
+}
+
+function renderTablaComparacion(panel, grupoA, grupoB, labelA, labelB) {
+  const filas = PC_DIMS.map(dim => {
+    const valsA = grupoA.map(r => r[dim.key]).filter(v => v != null && !isNaN(v));
+    const valsB = grupoB.map(r => r[dim.key]).filter(v => v != null && !isNaN(v));
+    const avgA = valsA.length ? d3.mean(valsA) : null;
+    const avgB = valsB.length ? d3.mean(valsB) : null;
+    let deltaPct = null;
+    if (avgA != null && avgB != null && avgB !== 0) deltaPct = ((avgA - avgB) / Math.abs(avgB)) * 100;
+    const deltaColor = deltaPct == null ? "#687386" : (deltaPct > 0 ? "#c94c4c" : "#2f9c95");
+    const deltaText = deltaPct == null ? "—" : `${deltaPct > 0 ? "+" : ""}${deltaPct.toFixed(1)}%`;
+    const test = welchTTest(valsA, valsB);
+    const pInfo = formatPValor(test ? test.p : null);
+    return `<tr>
+      <td style="padding:4px 8px;color:#354052">${escapeHTML(dim.label)}</td>
+      <td style="padding:4px 8px;text-align:right">${avgA != null ? avgA.toFixed(2) : "—"}</td>
+      <td style="padding:4px 8px;text-align:right">${avgB != null ? avgB.toFixed(2) : "—"}</td>
+      <td style="padding:4px 8px;text-align:right;color:${deltaColor};font-weight:700">${deltaText}</td>
+      <td style="padding:4px 8px;text-align:right;color:${pInfo.significant ? '#2f9c95' : '#687386'};font-weight:${pInfo.significant ? 700 : 400}">${pInfo.text} ${pInfo.stars}</td>
+    </tr>`;
+  }).join("");
+  panel.innerHTML = `
+    <div style="font-size:11px;color:#687386;margin-bottom:6px">${escapeHTML(labelA)} (n=${grupoA.length}) &nbsp;vs&nbsp; ${escapeHTML(labelB)} (n=${grupoB.length})</div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead><tr style="text-align:left;color:#687386;border-bottom:1px solid #e6e5e3">
+        <th style="padding:4px 8px">Variable</th><th style="padding:4px 8px;text-align:right">${escapeHTML(labelA)}</th><th style="padding:4px 8px;text-align:right">${escapeHTML(labelB)}</th><th style="padding:4px 8px;text-align:right">Δ A vs B</th><th style="padding:4px 8px;text-align:right">p-valor</th>
+      </tr></thead>
+      <tbody>${filas}</tbody>
+    </table>
+    <div style="font-size:10px;color:#9aa5b1;margin-top:6px">Prueba t de Welch (dos colas). ✱ p&lt;0.05, ✱✱ p&lt;0.01, ✱✱✱ p&lt;0.001, ns = no significativo.</div>`;
+}
+
+/* ── Tab Investigación: metodología, loadings PCA, importancia de atributos ── */
+async function cargarMetodologia() {
+  const panel = document.getElementById("panel-metodologia");
+  panel.innerHTML = '<div class="empty-state">Cargando metodología...</div>';
+  try {
+    const resp = await fetch("/api/metodologia");
+    if (!resp.ok) throw new Error("error");
+    const m = await resp.json();
+    let html = `<div style="font-size:12px;font-weight:700;color:#354052;margin-bottom:6px">&#x1F4CB; Ficha de metodología</div>`;
+    html += `<div style="font-size:11px;color:#354052;margin-bottom:8px;line-height:1.6">
+      <strong>PCA (embedding interactivo):</strong> ${m.pca_vivo.n_muestras} muestras · ${m.pca_vivo.n_features} atributos numéricos (excluye ocupación) · Varianza explicada PC1=${(m.pca_vivo.varianza_pc1 * 100).toFixed(1)}%, PC2=${(m.pca_vivo.varianza_pc2 * 100).toFixed(1)}%, Total=${(m.pca_vivo.varianza_total * 100).toFixed(1)}%<br>
+      <strong>t-SNE:</strong> perplexity=${m.tsne.perplexity}, max_iter=${m.tsne.max_iter}<br>
+      <strong>UMAP:</strong> n_neighbors=${m.umap.n_neighbors}, min_dist=${m.umap.min_dist}<br>
+      <strong>MDS:</strong> dissimilarity=${escapeHTML(m.mds.dissimilarity)}, max_iter=${m.mds.max_iter}
+    </div>`;
+    if (m.kmeans) {
+      const mv = m.kmeans.metricas_validacion || {};
+      html += `<div style="font-size:11px;color:#354052;margin-bottom:8px;line-height:1.6">
+        <strong>K-Means (script offline):</strong> k óptimo=${m.kmeans.k_optimo} (${escapeHTML(m.kmeans.criterio_k || "")}) · silueta=${m.kmeans.silueta_promedio} · Davies-Bouldin=${mv.davies_bouldin ?? "—"} · Calinski-Harabasz=${mv.calinski_harabasz ?? "—"} · n=${m.kmeans.n_muestras}, ${m.kmeans.n_features} atributos
+      </div>`;
+    }
+    if (m.dbscan) {
+      const mv = m.dbscan.metricas_validacion || {};
+      const p = m.dbscan.parametros || {};
+      html += `<div style="font-size:11px;color:#354052;margin-bottom:4px;line-height:1.6">
+        <strong>DBSCAN (script offline):</strong> eps=${p.eps ?? "—"} (${escapeHTML(m.dbscan.criterio_eps || "")}), min_samples=${p.min_samples ?? "—"} (${escapeHTML(m.dbscan.criterio_min_samples || "")}) · ${m.dbscan.n_clusters} clusters · ${m.dbscan.n_anomalias} anomalías (${m.dbscan.porcentaje_anomalias}%) · silueta=${mv.silueta ?? "—"} · Davies-Bouldin=${mv.davies_bouldin ?? "—"} · n=${m.dbscan.n_muestras}, ${m.dbscan.n_features} atributos
+      </div>`;
+    }
+    html += `<div style="font-size:10px;color:#9aa5b1;margin-top:4px">Nota: K-Means/DBSCAN se ejecutan offline con su propio vector de atributos; el embedding interactivo (PCA/t-SNE/UMAP/MDS) usa ${m.pca_vivo.n_features} atributos numéricos actualizados en cada carga. Ambos análisis se muestran por separado y de forma transparente.</div>`;
+    panel.innerHTML = html;
+  } catch (e) {
+    panel.innerHTML = '<div class="empty-state">No se pudo cargar la metodología.</div>';
+  }
+}
+
+function renderLoadingsPCA() {
+  const panel = document.getElementById("panel-loadings-pca");
+  if (!panel) return;
+  if (!DATA || !DATA.pca || !DATA.pca.loadings) {
+    panel.innerHTML = '';
+    return;
+  }
+  const loadings = [...DATA.pca.loadings].sort((a, b) => (Math.abs(b.pc1) + Math.abs(b.pc2)) - (Math.abs(a.pc1) + Math.abs(a.pc2)));
+  const filas = loadings.map(l => `<tr>
+    <td style="padding:3px 8px;color:#354052">${escapeHTML(l.label)}</td>
+    <td style="padding:3px 8px;text-align:right;color:${l.pc1 >= 0 ? '#2f9c95' : '#c94c4c'}">${l.pc1.toFixed(3)}</td>
+    <td style="padding:3px 8px;text-align:right;color:${l.pc2 >= 0 ? '#2f9c95' : '#c94c4c'}">${l.pc2.toFixed(3)}</td>
+  </tr>`).join("");
+  const varExp = DATA.pca.varianza_explicada || [0, 0];
+  panel.innerHTML = `
+    <div style="font-size:12px;font-weight:700;color:#354052;margin-bottom:6px">&#x1F9ED; Loadings de PCA (qué atributos pesan más en cada eje)</div>
+    <div style="font-size:10px;color:#687386;margin-bottom:6px">Valores cercanos a ±1 indican mayor peso del atributo en ese componente. PC1 explica ${(varExp[0] * 100).toFixed(1)}%, PC2 ${(varExp[1] * 100).toFixed(1)}% de la varianza.</div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead><tr style="text-align:left;color:#687386;border-bottom:1px solid #e6e5e3"><th style="padding:3px 8px">Atributo</th><th style="padding:3px 8px;text-align:right">PC1</th><th style="padding:3px 8px;text-align:right">PC2</th></tr></thead>
+      <tbody>${filas}</tbody>
+    </table>`;
+}
+
+function calcularFStat(valoresPorGrupo) {
+  const grupos = valoresPorGrupo.filter(g => g.length > 1);
+  if (grupos.length < 2) return null;
+  const todos = grupos.flat();
+  const granMedia = d3.mean(todos);
+  const k = grupos.length;
+  const nTotal = todos.length;
+  let ssBetween = 0, ssWithin = 0;
+  grupos.forEach(g => {
+    const m = d3.mean(g);
+    ssBetween += g.length * Math.pow(m - granMedia, 2);
+    g.forEach(v => { ssWithin += Math.pow(v - m, 2); });
+  });
+  const dfBetween = k - 1;
+  const dfWithin = nTotal - k;
+  if (dfWithin <= 0 || ssWithin === 0) return null;
+  const msBetween = ssBetween / dfBetween;
+  const msWithin = ssWithin / dfWithin;
+  return msWithin > 0 ? msBetween / msWithin : null;
+}
+
+async function cargarImportanciaAtributos() {
+  const panel = document.getElementById("panel-importancia-atributos");
+  if (!panel) return;
+  panel.innerHTML = '<div class="empty-state">Calculando importancia de atributos...</div>';
+  try {
+    const resp = await fetch("/api/clustering");
+    if (!resp.ok) throw new Error("no disponible");
+    const data = await resp.json();
+    const puntos = data.puntos || [];
+    const clusterPorId = new Map(puntos.map(p => [p.id, p.cluster]));
+    const grupos = {};
+    DATA.registros.forEach(r => {
+      const c = clusterPorId.get(r.id);
+      if (c === undefined || c === null) return;
+      if (!grupos[c]) grupos[c] = [];
+      grupos[c].push(r);
+    });
+    const clusterKeys = Object.keys(grupos);
+    if (clusterKeys.length < 2) {
+      panel.innerHTML = '<div class="empty-state">No hay suficientes clusters para calcular importancia.</div>';
+      return;
+    }
+    const resultados = PC_DIMS.map(dim => {
+      const valoresPorGrupo = clusterKeys.map(k => grupos[k].map(r => r[dim.key]).filter(v => v != null && !isNaN(v)));
+      const fStat = calcularFStat(valoresPorGrupo);
+      return { label: dim.label, fStat };
+    }).filter(r => r.fStat != null && isFinite(r.fStat));
+    resultados.sort((a, b) => b.fStat - a.fStat);
+    const maxF = resultados.length ? resultados[0].fStat : 1;
+    const filas = resultados.map(r => {
+      const pct = Math.max(4, Math.min(100, (r.fStat / maxF) * 100));
+      return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+        <div style="width:120px;font-size:11px;color:#354052;text-align:right">${escapeHTML(r.label)}</div>
+        <div style="flex:1;background:#eef1f5;border-radius:3px;height:14px;position:relative">
+          <div style="width:${pct}%;background:#2f9c95;height:100%;border-radius:3px"></div>
+        </div>
+        <div style="width:56px;font-size:10px;color:#687386">F=${r.fStat.toFixed(1)}</div>
+      </div>`;
+    }).join("");
+    panel.innerHTML = `
+      <div style="font-size:12px;font-weight:700;color:#354052;margin-bottom:6px">&#x1F4CA; Importancia de atributos (ANOVA F, ${clusterKeys.length} clusters K-Means)</div>
+      <div style="font-size:10px;color:#687386;margin-bottom:8px">Mayor F = el atributo separa mejor a los grupos identificados por K-Means. Útil para decidir qué variables investigar primero.</div>
+      ${filas}
+    `;
+  } catch (e) {
+    panel.innerHTML = '<div class="empty-state">Ejecuta clustering_kmeans.py para habilitar este panel.</div>';
+  }
+}
+
+function renderComparacionCohortes() {
+  const panel = document.getElementById("panel-comparacion");
+  if (!panel || !DATA) return;
+  if (manualCompareMode) {
+    const countA = document.getElementById("grupo-a-count");
+    const countB = document.getElementById("grupo-b-count");
+    if (countA) countA.textContent = groupASelection.size;
+    if (countB) countB.textContent = groupBSelection.size;
+    const grupoA = DATA.registros.filter(r => groupASelection.has(r.id));
+    const grupoB = DATA.registros.filter(r => groupBSelection.has(r.id));
+    if (grupoA.length === 0 || grupoB.length === 0) {
+      panel.innerHTML = '<div class="empty-state">Haz clic en al menos un punto del Cuadrante 1 (Grupo A) y uno del Cuadrante 2 (Grupo B) para comparar.</div>';
+      return;
+    }
+    renderTablaComparacion(panel, grupoA, grupoB, "Grupo A (Cuadrante 1)", "Grupo B (Cuadrante 2)");
+    return;
+  }
+  const selA = document.getElementById("cohorte-a-select");
+  const selB = document.getElementById("cohorte-b-select");
+  if (!selA || !selB || !selA.value || !selB.value) return;
+  const grupoA = DATA.registros.filter(r => r.trastorno === selA.value);
+  const grupoB = DATA.registros.filter(r => r.trastorno === selB.value);
+  if (grupoA.length === 0 || grupoB.length === 0) {
+    panel.innerHTML = '<div class="empty-state">No hay suficientes datos para comparar estas cohortes.</div>';
+    return;
+  }
+  renderTablaComparacion(panel, grupoA, grupoB, selA.value, selB.value);
+}
+
+let investigacionCargada = false;
+
+function switchTab(tabName) {
+  document.querySelectorAll('.q4-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabName);
+  });
+  document.querySelectorAll('.q4-tab-panel').forEach(panel => {
+    panel.style.display = panel.id === 'tab-' + tabName ? 'block' : 'none';
+  });
+  if (tabName === 'investigacion' && !investigacionCargada) {
+    investigacionCargada = true;
+    cargarMetodologia();
+    cargarImportanciaAtributos();
+    renderLoadingsPCA();
+  }
+}
+
+function updateDetails(record) {
+  actualizarBarraSeleccion();
+  const panel = document.getElementById("panel-detalles");
+  const panelAlertas = document.getElementById("panel-alertas");
+  const selRecs = selectedRecords();
+
+  if (selRecs.length === 0) {
+    panel.innerHTML = '<div class="empty-state">Seleccione uno o más puntos del espacio latente para ver sus perfiles y alertas clínicas.</div>';
+    panelAlertas.innerHTML = '';
+    document.getElementById("panel-insights-text").innerHTML =
+      '<div class="empty-state" style="height:100px">Seleccione puntos en el mapa para activar el análisis de causas.</div>';
+    document.getElementById("panel-contraste").innerHTML = '';
+    return;
+  }
+
+  panel.innerHTML = selRecs.map(r => renderProfileCard(r)).join('');
+
+  // Acumular alertas de todos los seleccionados
+  const todasAlertas = selRecs.flatMap(r => r.alertas || []);
+  if (todasAlertas.length > 0) {
+    panelAlertas.innerHTML = `
+      <div class="alerta-seccion">
+        <div class="alerta-seccion-label">🔔 Sistema de Alerta Temprana Clínica (${todasAlertas.length} alertas en ${selRecs.length} empleados)</div>
+        ${todasAlertas.map(a => `
+          <div class="alerta-box ${a.tipo}">
+            <span class="alerta-icono">${a.tipo === 'peligro' ? '🚨' : a.tipo === 'advertencia' ? '⚠️' : 'ℹ️'}</span>
+            <div>
+              <span class="alerta-titulo">${escapeHTML(a.titulo)}</span>
+              ${escapeHTML(a.mensaje)}
+              <div class="alerta-rec">💡 ${escapeHTML(a.recomendacion)}</div>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  } else {
+    panelAlertas.innerHTML = `
+      <div class="alerta-seccion">
+        <div class="alerta-seccion-label">🔔 Sistema de Alerta Temprana Clínica</div>
+        <div class="alerta-box ok"><span class="alerta-icono">✅</span><div><span class="alerta-titulo">Sin factores de riesgo</span>Ninguno de los ${selRecs.length} empleados seleccionados presenta patrones clínicos de riesgo.</div></div>
+      </div>`;
+  }
+
+  drawContrastChart(selRecs);
+}
+
+/* ── Explicabilidad: Gráfico de Contraste ── */
+const CONTRAST_VARS = [
+  { key: "nivel_estres",           label: "Estrés",        unit: "/10",    hi_is_bad: true  },
+  { key: "calidad_sueno",          label: "Cal. Sueño",    unit: "/10",    hi_is_bad: false },
+  { key: "duracion_sueno_horas",   label: "Sueño (h)",     unit: " h",     hi_is_bad: false },
+  { key: "deficit_sueno",          label: "Déficit",       unit: " h",     hi_is_bad: true  },
+  { key: "eficiencia_sueno",      label: "Eficiencia",    unit: "",       hi_is_bad: false },
+  { key: "puntaje_salud_sueno",   label: "Salud sueño",   unit: "",       hi_is_bad: false },
+  { key: "frecuencia_cardiaca",    label: "FC",            unit: " bpm",   hi_is_bad: true  },
+  { key: "nivel_actividad_fisica", label: "Actividad",     unit: " min",   hi_is_bad: false },
+  { key: "pasos_diarios",          label: "Pasos",         unit: "",       hi_is_bad: false },
+];
+
+function drawContrastChart(selRecs) {
+  const insightEl    = document.getElementById("panel-insights-text");
+  const contrasteEl  = document.getElementById("panel-contraste");
+  const n = selRecs.length;
+  const allRecs = DATA.registros;
+
+  // Calcular promedios
+  function avg(arr, key) {
+    const vals = arr.map(r => r[key]).filter(v => v != null && !isNaN(v));
+    return vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : null;
+  }
+
+  const promediosSel  = {};
+  const promediosGral = {};
+  CONTRAST_VARS.forEach(v => {
+    promediosSel[v.key]  = avg(selRecs, v.key);
+    promediosGral[v.key] = avg(allRecs, v.key);
+  });
+
+  // ── Insights dinámicos ───────────���──────────────────────────────���───────
+  const insights = [];
+  CONTRAST_VARS.forEach(v => {
+    const sel  = promediosSel[v.key];
+    const gral = promediosGral[v.key];
+    if (sel == null || gral == null || gral === 0) return;
+    const diffPct = ((sel - gral) / Math.abs(gral)) * 100;
+    if (Math.abs(diffPct) < 8) return;   // umbral 8%
+    const isHigher   = diffPct > 0;
+    const isBadTrend = (v.hi_is_bad && isHigher) || (!v.hi_is_bad && !isHigher);
+    const icono      = isBadTrend ? "🔴" : "��";
+    const direccion  = isHigher ? "superior" : "inferior";
+    insights.push({
+      text: `${icono} <strong>${v.label}</strong>: ${Math.abs(diffPct).toFixed(1)}% ${direccion} al promedio (${sel.toFixed(1)}${v.unit} vs ${gral.toFixed(1)}${v.unit})`,
+      bad: isBadTrend
+    });
+  });
+
+  // Construir HTML de insights
+  let insightHTML = `<div class="insight-header">💡 Insight de Negocio — ${n} empleado${n !== 1 ? 's' : ''} seleccionado${n !== 1 ? 's' : ''}</div>`;
+  if (insights.length === 0) {
+    insightHTML += `<div class="insight-box neutral"><span>✅</span><div>El grupo no presenta diferencias significativas (≥8%) respecto al promedio general de la empresa.</div></div>`;
+  } else {
+    insights.forEach(ins => {
+      insightHTML += `<div class="insight-box ${ins.bad ? 'positive' : 'negative'}"><span>${ins.bad ? '⚠️' : '✅'}</span><div>${ins.text}</div></div>`;
+    });
+  }
+  insightEl.innerHTML = insightHTML;
+
+  // ── Gráfico de barras agrupadas (D3) ──────────────────────────────────
+  contrasteEl.innerHTML = "";
+  const rect = contrasteEl.parentElement.getBoundingClientRect();
+  const W  = Math.max(rect.width - 4, 260);
+  const barH = 20;
+  const gap  = 5;
+  const rowH = barH * 2 + gap + 14;
+  const mC   = { t: 24, r: 60, b: 8, l: 72 };
+  const innerW = W - mC.l - mC.r;
+  const H = CONTRAST_VARS.length * rowH + mC.t + mC.b;
+
+  // Dominio global para cada variable (comparar en misma escala)
+  const svg = d3.select(contrasteEl).append("svg")
+    .attr("width", W).attr("height", H)
+    .style("font-family","'Segoe UI',Arial,sans-serif");
+
+  const g = svg.append("g").attr("transform", `translate(${mC.l},${mC.t})`);
+
+  // Título
+  svg.append("text")
+    .attr("x", W / 2).attr("y", 14)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "10px").attr("font-weight", "700").attr("fill", "#354052")
+    .text(`Contraste: ${n} seleccionados vs. empresa completa (${allRecs.length})`);
+
+  // Leyenda
+  const LEG_DATA = [
+    { label: `Seleccionados (${n})`, color: "#e05c5c" },
+    { label: "Promedio empresa",     color: "#4a7fcf" },
+  ];
+  LEG_DATA.forEach((ld, li) => {
+    svg.append("rect").attr("x", mC.l + li * 130).attr("y", 3)
+      .attr("width", 9).attr("height", 9).attr("rx", 2).attr("fill", ld.color);
+    svg.append("text").attr("x", mC.l + li * 130 + 12).attr("y", 11)
+      .attr("font-size", "8px").attr("fill", "#687386").text(ld.label);
+  });
+
+  CONTRAST_VARS.forEach((v, vi) => {
+    const sel  = promediosSel[v.key];
+    const gral = promediosGral[v.key];
+    if (sel == null || gral == null) return;
+
+    const maxVal = Math.max(sel, gral) * 1.15 || 1;
+    const xScale = d3.scaleLinear().domain([0, maxVal]).range([0, innerW]);
+    const yBase  = vi * rowH;
+
+    // Etiqueta del eje Y
+    g.append("text")
+      .attr("x", -4).attr("y", yBase + barH / 2 + 4)
+      .attr("text-anchor", "end").attr("font-size", "9px").attr("font-weight", "700")
+      .attr("fill", "#354052").text(v.label);
+
+    // Barra SELECCIONADOS
+    const selW = xScale(sel);
+    g.append("rect")
+      .attr("x", 0).attr("y", yBase)
+      .attr("width", selW).attr("height", barH)
+      .attr("rx", 3).attr("fill", "#e05c5c");
+    g.append("text")
+      .attr("x", selW + 3).attr("y", yBase + barH / 2 + 4)
+      .attr("font-size", "9px").attr("font-weight", "700").attr("fill", "#e05c5c")
+      .text(sel.toFixed(1) + v.unit);
+
+    // Barra GENERAL
+    const gralW = xScale(gral);
+    g.append("rect")
+      .attr("x", 0).attr("y", yBase + barH + gap)
+      .attr("width", gralW).attr("height", barH)
+      .attr("rx", 3).attr("fill", "#4a7fcf");
+    g.append("text")
+      .attr("x", gralW + 3).attr("y", yBase + barH + gap + barH / 2 + 4)
+      .attr("font-size", "9px").attr("font-weight", "700").attr("fill", "#4a7fcf")
+      .text(gral.toFixed(1) + v.unit);
+
+    // Separador entre variables
+    if (vi < CONTRAST_VARS.length - 1) {
+      g.append("line")
+        .attr("x1", 0).attr("x2", innerW)
+        .attr("y1", yBase + rowH - 2).attr("y2", yBase + rowH - 2)
+        .attr("stroke", "#edf1f5").attr("stroke-width", 1);
+    }
+  });
+}
+
+function populateSelects() {
+  // Coordenadas paralelas no necesita select de feature
+  // El selector de color (select-pc-color) ya está en el HTML estático
+}
+
+function legendShapeSvg(shapeType, color) {
+  const d = d3.symbol().type(shapeType).size(64)();
+  return `<svg width="12" height="12" viewBox="-6 -6 12 12" style="flex-shrink:0"><path d="${d}" fill="${color}" stroke="#fff" stroke-width="0.5"></path></svg>`;
+}
+function drawLegend() {
+  const c = document.getElementById("legend-container");
+  c.innerHTML = "";
+  Object.entries(DATA.colores_trastorno).forEach(([label, color]) => {
+    c.innerHTML += `<div class="legend-item">${legendShapeSvg(shapeForTrastorno(label), color)}${escapeHTML(label)}</div>`;
+  });
+}
+
+function redrawAll() {
+  drawScatter();
+  drawBarChart();
+  drawParallelCoords();
+}
+
+/* ── Riesgo Global ── */
+async function cargarRiesgoGlobal() {
+  const el = document.getElementById("ml-global-risk");
+  try {
+    const r = await fetch("/api/riesgo-global").then(x => x.json());
+    const pct = r.pct_con_alertas;
+    const altosRiesgo = r.empleados_alto_riesgo.length;
+    el.innerHTML = `
+      <h3 style="font-size:13px;color:#172033;margin-bottom:10px">📊 Resumen de Riesgo Organizacional (${r.total_empleados} empleados)</h3>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:10px">
+        <div class="risk-stat danger"><div class="val">${r.por_tipo.peligro || 0}</div><div class="lbl">Alertas Críticas</div></div>
+        <div class="risk-stat warn"><div class="val">${r.por_tipo.advertencia || 0}</div><div class="lbl">Advertencias</div></div>
+        <div class="risk-stat"><div class="val">${r.por_tipo.info || 0}</div><div class="lbl">Info</div></div>
+        <div class="risk-stat ${pct>50?'danger':pct>25?'warn':'safe'}"><div class="val">${pct}%</div><div class="lbl">Empleados con Riesgo</div></div>
+        <div class="risk-stat ${altosRiesgo>10?'danger':altosRiesgo>5?'warn':'safe'}"><div class="val">${altosRiesgo}</div><div class="lbl">Alto Riesgo (≥2 alertas)</div></div>
+      </div>
+      <div style="font-size:11px;color:#687386;margin-bottom:4px"><strong>Reglas activadas:</strong> ${Object.entries(r.por_regla).map(([k,v])=>`${k.replace(/_/g,' ')}: ${v}`).join(' · ')}</div>
+      ${altosRiesgo > 0 ? `
+      <details style="margin-top:8px">
+        <summary style="font-size:11px;font-weight:700;color:#c94c4c;cursor:pointer">⚠️ Ver ${altosRiesgo} empleados de alto riesgo</summary>
+        <div style="margin-top:6px;max-height:120px;overflow-y:auto">
+          <table style="border-collapse:collapse;font-size:11px;width:100%">
+            <tr><th style="padding:3px 6px;border:1px solid #dce3ec;background:#eef2f6">#</th><th style="padding:3px 6px;border:1px solid #dce3ec;background:#eef2f6">Ocupación</th><th style="padding:3px 6px;border:1px solid #dce3ec;background:#eef2f6">Trastorno</th><th style="padding:3px 6px;border:1px solid #dce3ec;background:#eef2f6">Alertas</th></tr>
+            ${r.empleados_alto_riesgo.slice(0,20).map(e=>`<tr><td style="padding:3px 6px;border:1px solid #dce3ec">${e.id_persona}</td><td style="padding:3px 6px;border:1px solid #dce3ec">${e.ocupacion}</td><td style="padding:3px 6px;border:1px solid #dce3ec">${e.trastorno_sueno}</td><td style="padding:3px 6px;border:1px solid #dce3ec;text-align:center;font-weight:800;color:#c94c4c">${e.num_alertas}</td></tr>`).join('')}
+          </table>
+        </div>
+      </details>` : ''}
+      <hr style="border:0;border-top:1px solid #e8edf3;margin:12px 0">`;
+  } catch(e) {
+    el.innerHTML = '<p style="color:#687386;font-size:11px">No se pudo cargar el resumen de riesgo global.</p>';
+  }
+}
+
+// ════════════ CLUSTERING (K-Means) ════════════
+const CLUSTER_PAL = ["#5E9FE8","#EAC26B","#72BC8F","#BF8EDA","#DE9255","#DF84A8","#4FB9C9","#E97366"];
+const CLUSTER_SHAPES = [d3.symbolCircle,d3.symbolSquare,d3.symbolTriangle,d3.symbolDiamond,d3.symbolStar,d3.symbolCross,d3.symbolWye];
+
+/* ── Navegación entre clusters/regiones (K-Means) ── */
+let LAST_CLUSTER_DATA = null;
+let clusterNavIndex = -1; // -1 = todos los clusters
+function clusterNavGo(delta) {
+  if (!LAST_CLUSTER_DATA) return;
+  const n = LAST_CLUSTER_DATA.clusters.length;
+  clusterNavIndex = clusterNavIndex === -1 ? (delta > 0 ? 0 : n - 1) : (clusterNavIndex + delta + n) % n;
+  renderClusterNav();
+}
+function clusterNavReset() {
+  clusterNavIndex = -1;
+  renderClusterNav();
+}
+function renderClusterNav() {
+  const r = LAST_CLUSTER_DATA;
+  if (!r) return;
+  const label = document.getElementById("cluster-nav-label");
+  const activo = clusterNavIndex === -1 ? null : r.clusters[clusterNavIndex];
+  if (label) label.textContent = activo == null
+    ? `Mostrando todos los clusters (${r.clusters.length})`
+    : `Región: Cluster ${activo.cluster} de ${r.clusters.length} · n=${activo.tamano} (${activo.porcentaje}%) · 🩺 ${fenotipoClinicoCluster(activo).nombre}`;
+  drawClusterScatter("cl-scatter", r.puntos, r.k_optimo, r.varianza_pca, activo ? activo.cluster : null);
+  document.querySelectorAll(".cluster-card").forEach(el => el.classList.remove("active-cluster-card"));
+  if (activo != null) {
+    const card = document.getElementById("kmc-card-" + activo.cluster);
+    if (card) { card.classList.add("active-cluster-card"); card.scrollIntoView({behavior:"smooth", block:"nearest"}); }
+  }
+}
+
+/* ── Navegación entre clusters/regiones (DBSCAN) ── */
+let LAST_DBSCAN_DATA = null;
+let dbscanNavIndex = -1;
+function dbscanNavGo(delta) {
+  if (!LAST_DBSCAN_DATA) return;
+  const n = LAST_DBSCAN_DATA.clusters.length;
+  dbscanNavIndex = dbscanNavIndex === -1 ? (delta > 0 ? 0 : n - 1) : (dbscanNavIndex + delta + n) % n;
+  renderDbscanNav();
+}
+function dbscanNavReset() {
+  dbscanNavIndex = -1;
+  renderDbscanNav();
+}
+function renderDbscanNav() {
+  const r = LAST_DBSCAN_DATA;
+  if (!r) return;
+  const label = document.getElementById("dbscan-nav-label");
+  const activo = dbscanNavIndex === -1 ? null : r.clusters[dbscanNavIndex];
+  if (label) label.textContent = activo == null
+    ? `Mostrando todos los clusters (${r.clusters.length})`
+    : `Región: Cluster ${activo.cluster} de ${r.clusters.length} · n=${activo.tamano} (${activo.porcentaje}%)`;
+  drawDbscanScatter("db-scatter", r.puntos, r.varianza_pca, activo ? activo.cluster : null);
+  document.querySelectorAll(".cluster-card").forEach(el => el.classList.remove("active-cluster-card"));
+  if (activo != null) {
+    const card = document.getElementById("dbc-card-" + activo.cluster);
+    if (card) { card.classList.add("active-cluster-card"); card.scrollIntoView({behavior:"smooth", block:"nearest"}); }
+  }
+}
+const PERFIL_LABELS = {
+  edad:"Edad", duracion_sueno_horas:"Sueño (h)", calidad_sueno:"Calidad",
+  nivel_estres:"Estrés", nivel_actividad_fisica:"Actividad", frecuencia_cardiaca:"Freq. card.",
+  pasos_diarios:"Pasos", deficit_sueno:"Déficit", puntaje_salud_sueno:"Salud sueño"
+};
+
+function drawLineChart(containerId, xs, ys, xlabel, ylabel, color, kOpt) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = "";
+  const w = container.clientWidth || 440, h = 240;
+  const m = {t:16, r:16, b:38, l:52};
+  const svg = d3.select(container).append("svg").attr("width", w).attr("height", h);
+  const x = d3.scaleLinear().domain(d3.extent(xs)).range([m.l, w - m.r]);
+  const yMin = d3.min(ys), yMax = d3.max(ys);
+  const pad = (yMax - yMin) * 0.12 || 1;
+  const y = d3.scaleLinear().domain([yMin - pad, yMax + pad]).range([h - m.b, m.t]);
+  svg.append("g").attr("transform",`translate(0,${h-m.b})`).call(d3.axisBottom(x).ticks(xs.length).tickFormat(d3.format("d"))).selectAll("text").attr("font-size","10px");
+  svg.append("g").attr("transform",`translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5)).selectAll("text").attr("font-size","10px");
+  svg.append("text").attr("x",(w+m.l)/2).attr("y",h-4).attr("text-anchor","middle").attr("font-size","11px").attr("fill","#687386").text(xlabel);
+  svg.append("text").attr("transform",`rotate(-90)`).attr("x",-(h/2)).attr("y",13).attr("text-anchor","middle").attr("font-size","11px").attr("fill","#687386").text(ylabel);
+  // linea k optimo
+  svg.append("line").attr("x1",x(kOpt)).attr("x2",x(kOpt)).attr("y1",m.t).attr("y2",h-m.b).attr("stroke","#E56458").attr("stroke-dasharray","5,4").attr("stroke-width",1.5);
+  svg.append("text").attr("x",x(kOpt)+5).attr("y",m.t+12).attr("font-size","10px").attr("fill","#E56458").attr("font-weight",700).text("k="+kOpt);
+  const line = d3.line().x((d,i)=>x(xs[i])).y((d,i)=>y(ys[i]));
+  svg.append("path").datum(ys).attr("fill","none").attr("stroke",color).attr("stroke-width",2.5).attr("d",line);
+  svg.selectAll("circle").data(ys).join("circle").attr("cx",(d,i)=>x(xs[i])).attr("cy",d=>y(d)).attr("r",4.5).attr("fill",color).attr("stroke","#fff").attr("stroke-width",1.5);
+}
+
+function drawClusterScatter(containerId, puntos, kOpt, varPca, highlightCluster) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = "";
+  const w = container.clientWidth || 900, h = 380;
+  const m = {t:16, r:16, b:40, l:48};
+  const svg = d3.select(container).append("svg").attr("width", w).attr("height", h);
+  const xExt = d3.extent(puntos, d=>d.x), yExt = d3.extent(puntos, d=>d.y);
+  const xp = (xExt[1]-xExt[0])*0.06 || 1, yp = (yExt[1]-yExt[0])*0.06 || 1;
+  const x = d3.scaleLinear().domain([xExt[0]-xp,xExt[1]+xp]).range([m.l, w-m.r]);
+  const y = d3.scaleLinear().domain([yExt[0]-yp,yExt[1]+yp]).range([h-m.b, m.t]);
+  svg.append("g").attr("transform",`translate(0,${h-m.b})`).call(d3.axisBottom(x).ticks(7)).selectAll("text").attr("font-size","9px");
+  svg.append("g").attr("transform",`translate(${m.l},0)`).call(d3.axisLeft(y).ticks(6)).selectAll("text").attr("font-size","9px");
+  svg.append("text").attr("x",(w+m.l)/2).attr("y",h-4).attr("text-anchor","middle").attr("font-size","11px").attr("fill","#687386").text(`PC1 (${(varPca[0]*100).toFixed(1)}%)`);
+  svg.append("text").attr("transform","rotate(-90)").attr("x",-(h/2)).attr("y",12).attr("text-anchor","middle").attr("font-size","11px").attr("fill","#687386").text(`PC2 (${(varPca[1]*100).toFixed(1)}%)`);
+  const hasHighlight = highlightCluster != null;
+  const symGen = d3.symbol();
+  svg.append("g").selectAll("path").data(puntos).join("path")
+    .attr("transform",d=>`translate(${x(d.x)},${y(d.y)})`)
+    .attr("d",d=>symGen.size(hasHighlight && d.cluster===highlightCluster ? 90 : 50).type(CLUSTER_SHAPES[d.cluster % CLUSTER_SHAPES.length])())
+    .attr("fill",d=>CLUSTER_PAL[d.cluster % CLUSTER_PAL.length])
+    .attr("stroke",d=>hasHighlight && d.cluster===highlightCluster ? "#111827" : "#fff")
+    .attr("stroke-width",d=>hasHighlight && d.cluster===highlightCluster ? 1.4 : 0.5)
+    .attr("opacity",d=>!hasHighlight ? 0.8 : (d.cluster===highlightCluster ? 0.95 : 0.12))
+    .on("mouseenter",(ev,d)=>TOOLTIP.style("opacity",1).html(`<strong>#${d.id}</strong> · Cluster ${d.cluster}<br>Trastorno real: ${escapeHTML(d.trastorno)}${d.distancia_centroide!=null?`<br>Dist. al centroide: ${d.distancia_centroide}`:""}`))
+    .on("mousemove",ev=>TOOLTIP.style("left",(ev.pageX+12)+"px").style("top",(ev.pageY-10)+"px"))
+    .on("mouseleave",()=>TOOLTIP.style("opacity",0));
+  // leyenda
+  const leg = svg.append("g").attr("transform",`translate(${m.l+8},${m.t})`);
+  for (let c=0;c<kOpt;c++){
+    const g = leg.append("g").attr("transform",`translate(${(c%4)*110},${Math.floor(c/4)*18})`);
+    g.append("path").attr("transform","translate(5,0)").attr("d",d3.symbol().size(48).type(CLUSTER_SHAPES[c%CLUSTER_SHAPES.length])()).attr("fill",CLUSTER_PAL[c%CLUSTER_PAL.length]);
+    g.append("text").attr("x",14).attr("y",4).attr("font-size","10px").attr("fill","#354052").text("Cluster "+c);
+  }
+}
+
+// ═════════��══ DBSCAN (densidad + anomalias) ════════════
+function drawKDistanceChart(containerId, orden, distancia, idxCodo, eps) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = "";
+  const w = container.clientWidth || 900, h = 260;
+  const m = {t:16, r:16, b:38, l:56};
+  const svg = d3.select(container).append("svg").attr("width", w).attr("height", h);
+  const x = d3.scaleLinear().domain(d3.extent(orden)).range([m.l, w - m.r]);
+  const y = d3.scaleLinear().domain([0, d3.max(distancia) * 1.08]).range([h - m.b, m.t]);
+  svg.append("g").attr("transform",`translate(0,${h-m.b})`).call(d3.axisBottom(x).ticks(8)).selectAll("text").attr("font-size","9px");
+  svg.append("g").attr("transform",`translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5)).selectAll("text").attr("font-size","9px");
+  svg.append("text").attr("x",(w+m.l)/2).attr("y",h-4).attr("text-anchor","middle").attr("font-size","11px").attr("fill","#687386").text("Puntos ordenados por distancia");
+  svg.append("text").attr("transform","rotate(-90)").attr("x",-(h/2)).attr("y",13).attr("text-anchor","middle").attr("font-size","11px").attr("fill","#687386").text("Distancia al k-esimo vecino");
+  svg.append("line").attr("x1",m.l).attr("x2",w-m.r).attr("y1",y(eps)).attr("y2",y(eps)).attr("stroke","#E56458").attr("stroke-dasharray","5,4").attr("stroke-width",1.5);
+  svg.append("text").attr("x",w-m.r-4).attr("y",y(eps)-6).attr("text-anchor","end").attr("font-size","10px").attr("fill","#E56458").attr("font-weight",700).text("eps = "+eps.toFixed(3));
+  const line = d3.line().x((d,i)=>x(orden[i])).y((d,i)=>y(distancia[i]));
+  svg.append("path").datum(distancia).attr("fill","none").attr("stroke","#2783DE").attr("stroke-width",2).attr("d",line);
+  svg.append("circle").attr("cx",x(orden[idxCodo])).attr("cy",y(distancia[idxCodo])).attr("r",5.5).attr("fill","#E56458").attr("stroke","#fff").attr("stroke-width",1.5);
+}
+
+function drawDbscanScatter(containerId, puntos, varPca, highlightCluster) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = "";
+  const w = container.clientWidth || 900, h = 380;
+  const m = {t:16, r:16, b:40, l:48};
+  const svg = d3.select(container).append("svg").attr("width", w).attr("height", h);
+  const xExt = d3.extent(puntos, d=>d.x), yExt = d3.extent(puntos, d=>d.y);
+  const xp = (xExt[1]-xExt[0])*0.06 || 1, yp = (yExt[1]-yExt[0])*0.06 || 1;
+  const x = d3.scaleLinear().domain([xExt[0]-xp,xExt[1]+xp]).range([m.l, w-m.r]);
+  const y = d3.scaleLinear().domain([yExt[0]-yp,yExt[1]+yp]).range([h-m.b, m.t]);
+  svg.append("g").attr("transform",`translate(0,${h-m.b})`).call(d3.axisBottom(x).ticks(7)).selectAll("text").attr("font-size","9px");
+  svg.append("g").attr("transform",`translate(${m.l},0)`).call(d3.axisLeft(y).ticks(6)).selectAll("text").attr("font-size","9px");
+  svg.append("text").attr("x",(w+m.l)/2).attr("y",h-4).attr("text-anchor","middle").attr("font-size","11px").attr("fill","#687386").text(`PC1 (${(varPca[0]*100).toFixed(1)}%)`);
+  svg.append("text").attr("transform","rotate(-90)").attr("x",-(h/2)).attr("y",12).attr("text-anchor","middle").attr("font-size","11px").attr("fill","#687386").text(`PC2 (${(varPca[1]*100).toFixed(1)}%)`);
+  const hasHighlight = highlightCluster != null;
+  const normales = puntos.filter(d=>!d.es_anomalia), anomalias = puntos.filter(d=>d.es_anomalia);
+  const symbolTypes = [d3.symbolCircle,d3.symbolSquare,d3.symbolTriangle,d3.symbolDiamond,d3.symbolStar,d3.symbolCross,d3.symbolWye];
+  const symGen = d3.symbol();
+  svg.append("g").selectAll("path").data(normales).join("path")
+    .attr("transform",d=>`translate(${x(d.x)},${y(d.y)})`)
+    .attr("d",d=>symGen.size(hasHighlight && d.cluster===highlightCluster ? 90 : 52).type(symbolTypes[d.cluster % symbolTypes.length])())
+    .attr("fill",d=>CLUSTER_PAL[d.cluster % CLUSTER_PAL.length])
+    .attr("stroke",d=>hasHighlight && d.cluster===highlightCluster ? "#111827" : "#fff")
+    .attr("stroke-width",d=>hasHighlight && d.cluster===highlightCluster ? 1.4 : 0.5)
+    .attr("opacity",d=>!hasHighlight ? 0.82 : (d.cluster===highlightCluster ? 0.95 : 0.1))
+    .on("mouseenter",(ev,d)=>TOOLTIP.style("opacity",1).html(`<strong>#${d.id}</strong> · Cluster ${d.cluster}<br>Trastorno real: ${escapeHTML(d.trastorno)}<br>Dist. a su cluster: ${d.distancia_propio_cluster}`))
+    .on("mousemove",ev=>TOOLTIP.style("left",(ev.pageX+12)+"px").style("top",(ev.pageY-10)+"px"))
+    .on("mouseleave",()=>TOOLTIP.style("opacity",0));
+  svg.append("g").selectAll("path").data(anomalias).join("path")
+    .attr("transform",d=>`translate(${x(d.x)},${y(d.y)})`)
+    .attr("d",d3.symbol().size(70).type(d3.symbolCross)())
+    .attr("fill","#2C2C2B").attr("stroke","#fff").attr("stroke-width",0.6)
+    .attr("transform",d=>`translate(${x(d.x)},${y(d.y)}) rotate(45)`)
+    .on("mouseenter",(ev,d)=>TOOLTIP.style("opacity",1).html(`<strong>#${d.id}</strong> · ANOMALIA<br>Trastorno real: ${escapeHTML(d.trastorno)}<br>Cluster mas cercano: ${d.cluster_mas_cercano} (dist. ${d.distancia_cluster_mas_cercano})`))
+    .on("mousemove",ev=>TOOLTIP.style("left",(ev.pageX+12)+"px").style("top",(ev.pageY-10)+"px"))
+    .on("mouseleave",()=>TOOLTIP.style("opacity",0));
+  // leyenda
+  const clustersPresentes = [...new Set(normales.map(d=>d.cluster))].sort((a,b)=>a-b);
+  const leg = svg.append("g").attr("transform",`translate(${m.l+8},${m.t})`);
+  clustersPresentes.forEach((c,i) => {
+    const g = leg.append("g").attr("transform",`translate(${(i%4)*110},${Math.floor(i/4)*18})`);
+    g.append("path").attr("transform","translate(5,0)").attr("d",d3.symbol().size(48).type(symbolTypes[c % symbolTypes.length])()).attr("fill",CLUSTER_PAL[c%CLUSTER_PAL.length]);
+    g.append("text").attr("x",14).attr("y",4).attr("font-size","10px").attr("fill","#354052").text("Cluster "+c);
+  });
+  const rowAnom = Math.ceil(clustersPresentes.length/4);
+  const gA = leg.append("g").attr("transform",`translate(0,${rowAnom*18})`);
+  gA.append("path").attr("transform","translate(5,0) rotate(45)").attr("d",d3.symbol().size(60).type(d3.symbolCross)()).attr("fill","#2C2C2B");
+  gA.append("text").attr("x",14).attr("y",4).attr("font-size","10px").attr("fill","#354052").text("Anomalía");
+}
+
+async function loadDbscan() {
+  const panel = document.getElementById("dbscan-panel");
+  const content = document.getElementById("dbscan-content");
+  panel.style.display = "block";
+  content.innerHTML = '<div style="text-align:center;padding:30px;color:#687386">Cargando DBSCAN...</div>';
+  try {
+    const resp = await fetch("/api/dbscan");
+    if (!resp.ok) throw new Error("Ejecuta clustering_dbscan.py primero");
+    const r = await resp.json();
+
+    const kpi = (label,val) => `<div style="background:#eef2f6;border-radius:6px;padding:10px;text-align:center"><div style="font-size:10px;color:#687386">${label}</div><div style="font-size:18px;font-weight:800;color:#172033">${val}</div></div>`;
+    const met = r.metricas_validacion || {};
+
+    const cards = r.clusters.map(c => {
+      const color = CLUSTER_PAL[c.cluster % CLUSTER_PAL.length];
+      const perfil = Object.entries(c.perfil_medio).map(([k,v]) =>
+        `<div style="display:flex;justify-content:space-between;font-size:11px;padding:1px 0"><span style="color:#687386">${PERFIL_LABELS[k]||k}</span><strong>${v}</strong></div>`).join("");
+      const dist = Object.entries(c.distribucion_trastorno).map(([k,v]) =>
+        `<span style="font-size:10px;background:#f0eff0;border-radius:3px;padding:1px 5px;margin-right:3px;white-space:nowrap">${escapeHTML(k)}: ${v}</span>`).join("");
+      return `<div id="dbc-card-${c.cluster}" class="cluster-card" style="border:1px solid #e6e5e3;border-left:4px solid ${color};border-radius:8px;padding:12px;background:#fff;transition:box-shadow .15s">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <strong style="font-size:13px;color:#172033">Cluster ${c.cluster}</strong>
+          <span style="font-size:11px;color:#687386">n=${c.tamano} (${c.porcentaje}%)</span>
+        </div>
+        <div style="font-size:11px;margin-bottom:6px">Perfil dominante: <strong style="color:${color}">${escapeHTML(c.trastorno_dominante)}</strong> · dist. media al centroide ${c.distancia_media_centroide}</div>
+        <div style="margin-bottom:6px">${dist}</div>
+        ${perfil}
+      </div>`;
+    }).join("");
+
+    const filasAnom = r.anomalias.slice(0,12).map(a => `<tr>
+        <td style="padding:4px 8px;border-bottom:1px solid #eee">#${a.id}</td>
+        <td style="padding:4px 8px;border-bottom:1px solid #eee">${escapeHTML(a.trastorno)}</td>
+        <td style="padding:4px 8px;border-bottom:1px solid #eee">Cluster ${a.cluster_mas_cercano}</td>
+        <td style="padding:4px 8px;border-bottom:1px solid #eee">${a.distancia_cluster_mas_cercano}</td>
+      </tr>`).join("");
+
+    content.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px">
+        ${kpi("eps", r.parametros.eps)}
+        ${kpi("min_samples", r.parametros.min_samples)}
+        ${kpi("Clusters", r.n_clusters)}
+        ${kpi("Anomalías", r.n_anomalias + " (" + r.porcentaje_anomalias + "%)")}
+        ${kpi("Silueta", met.silueta ?? "—")}
+      </div>
+      <p style="font-size:11px;color:#687386;margin-bottom:6px"><strong>eps</strong> se eligió con ${escapeHTML(r.criterio_eps)}. <strong>min_samples</strong>: ${escapeHTML(r.criterio_min_samples)}.</p>
+      <p style="font-size:11px;color:#687386;margin-bottom:12px">Métricas de validación (sin contar anomalías): Davies-Bouldin = ${met.davies_bouldin ?? "—"} (menor mejor) · Calinski-Harabasz = ${met.calinski_harabasz ?? "—"} (mayor mejor).</p>
+      <hr style="border:0;border-top:1px solid #e8edf3;margin:12px 0">
+      <h3 style="font-size:14px;color:#172033;margin-bottom:8px">1. Elección de eps — Gráfico de Distancia-k</h3>
+      <div id="db-kdist"></div>
+      <hr style="border:0;border-top:1px solid #e8edf3;margin:12px 0">
+      <h3 style="font-size:14px;color:#172033;margin-bottom:8px">2. Clusters y anomalías sobre proyección PCA 2D</h3>
+      <p style="font-size:11px;color:#687386;margin-bottom:4px">Cada cluster combina COLOR y FORMA; las anomalías se marcan con una cruz negra.</p>
+      <div class="cluster-nav">
+        <button onclick="dbscanNavGo(-1)">◀ Anterior</button>
+        <span class="cluster-nav-label" id="dbscan-nav-label">Mostrando todos los clusters</span>
+        <button onclick="dbscanNavGo(1)">Siguiente ▶</button>
+        <button onclick="dbscanNavReset()">Ver todos</button>
+      </div>
+      <div id="db-scatter"></div>
+      <hr style="border:0;border-top:1px solid #e8edf3;margin:12px 0">
+      <h3 style="font-size:14px;color:#172033;margin-bottom:8px">3. Caracterización de cada cluster</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-bottom:14px">${cards}</div>
+      <h3 style="font-size:14px;color:#172033;margin-bottom:8px">4. Anomalías más alejadas de cualquier cluster</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:11px">
+        <thead><tr style="text-align:left;color:#687386"><th style="padding:4px 8px">ID</th><th style="padding:4px 8px">Trastorno real</th><th style="padding:4px 8px">Cluster más cercano</th><th style="padding:4px 8px">Distancia</th></tr></thead>
+        <tbody>${filasAnom}</tbody>
+      </table>
+    `;
+    LAST_DBSCAN_DATA = r;
+    dbscanNavIndex = -1;
+    setTimeout(() => {
+      drawKDistanceChart("db-kdist", r.curva_k_distancia.orden, r.curva_k_distancia.distancia, r.curva_k_distancia.idx_codo, r.parametros.eps);
+      renderDbscanNav();
+    }, 30);
+  } catch (e) {
+    content.innerHTML = `<div style="text-align:center;padding:30px;color:#c94c4c">${escapeHTML(e.message)}</div>`;
+  }
+}
+
+// ── Fenotipado clínico del sueño (anclado a ICSD-3) ───────────────────
+// Traduce el perfil estadístico de cada cluster a un fenotipo clínico
+// reconocible por un especialista del sueño. Es ORIENTATIVO, no diagnóstico.
+function fenotipoClinicoCluster(c) {
+  const p = (c && c.perfil_medio) || {};
+  const dom = c ? c.trastorno_dominante : "";
+  const num = (x) => { const n = Number(x); return Number.isFinite(n) ? n : 0; };
+  const estres = num(p.nivel_estres);
+  const dur = num(p.duracion_sueno_horas);
+  const cal = num(p.calidad_sueno);
+  const def = num(p.deficit_sueno);
+  const fc = num(p.frecuencia_cardiaca);
+  const edad = num(p.edad);
+  const dist = (c && c.distribucion_trastorno) || {};
+
+  if (dom === "Apnea del sueño") {
+    const sub = edad >= 50 ? "asociada a edad avanzada" : (estres >= 6 ? "con carga de estrés elevada" : "de patrón cardiometabólico");
+    return {
+      nombre: "Apnea obstructiva del sueño (SAHOS) — " + sub,
+      icsd: "ICSD-3: Apnea Obstructiva del Sueño · CIE-10 G47.33",
+      criterio: "Trastorno dominante Apnea (" + (dist["Apnea del sueño"] || 0) + "/" + c.tamano + "). FC media " + fc + " lpm; IMC y presión arterial son los predictores clínicos clave.",
+      manejo: "Confirmar con polisomnografía/poligrafía respiratoria; valorar CPAP y control de peso/HTA.",
+      color: "#5c8f3f"
+    };
+  }
+  if (dom === "Insomnio") {
+    if (estres >= 6.5) {
+      return {
+        nombre: "Insomnio por hiperactivación (hyperarousal)",
+        icsd: "ICSD-3: Trastorno de Insomnio Crónico · CIE-10 G47.00",
+        criterio: "Estrés " + estres + "/10, calidad " + cal + "/10 y FC " + fc + " lpm: activación autonómica elevada.",
+        manejo: "Terapia cognitivo-conductual para el insomnio (TCC-I) + manejo del estrés.",
+        color: "#c94c4c"
+      };
+    }
+    return {
+      nombre: "Insomnio por privación / conductual",
+      icsd: "ICSD-3: Trastorno de Insomnio Crónico · CIE-10 G47.00",
+      criterio: "Duración " + dur + " h con déficit medio " + def + " h: sueño insuficiente sostenido.",
+      manejo: "Higiene del sueño, control de estímulos y TCC-I.",
+      color: "#c94c4c"
+    };
+  }
+  if (cal >= 8 && estres <= 4 && dur >= 7 && dur <= 9) {
+    return {
+      nombre: "Durmiente sano consolidado",
+      icsd: "ICSD-3: sin trastorno del sueño (grupo de referencia)",
+      criterio: "Duración " + dur + " h (rango NSF 7–9 h), calidad " + cal + "/10 y estrés " + estres + "/10: patrón saludable.",
+      manejo: "Refuerzo de hábitos; sirve como grupo control frente a los demás fenotipos.",
+      color: "#2f6f9f"
+    };
+  }
+  return {
+    nombre: "Sin trastorno — patrón subclínico / en vigilancia",
+    icsd: "ICSD-3: sin diagnóstico formal; vigilar factores de riesgo",
+    criterio: "Sin trastorno dominante etiquetado, pero duración " + dur + " h / estrés " + estres + "/10 justifican seguimiento.",
+    manejo: "Vigilancia clínica y educación en higiene del sueño.",
+    color: "#687386"
+  };
+}
+
+async function loadClustering() {
+  const panel = document.getElementById("cluster-panel");
+  const content = document.getElementById("cluster-content");
+  panel.style.display = "block";
+  content.innerHTML = '<div style="text-align:center;padding:30px;color:#687386">Cargando clustering...</div>';
+  try {
+    const resp = await fetch("/api/clustering");
+    if (!resp.ok) throw new Error("Ejecuta clustering_kmeans.py primero");
+    const r = await resp.json();
+    const km_met = r.metricas_validacion || {};
+
+    const kpi = (label,val) => `<div style="background:#eef2f6;border-radius:6px;padding:10px;text-align:center"><div style="font-size:10px;color:#687386">${label}</div><div style="font-size:18px;font-weight:800;color:#172033">${val}</div></div>`;
+
+    const cards = r.clusters.map(c => {
+      const color = CLUSTER_PAL[c.cluster % CLUSTER_PAL.length];
+      const perfil = Object.entries(c.perfil_medio).map(([k,v]) =>
+        `<div style="display:flex;justify-content:space-between;font-size:11px;padding:1px 0"><span style="color:#687386">${PERFIL_LABELS[k]||k}</span><strong>${v}</strong></div>`).join("");
+      const dist = Object.entries(c.distribucion_trastorno).map(([k,v]) =>
+        `<span style="font-size:10px;background:#f0eff0;border-radius:3px;padding:1px 5px;margin-right:3px;white-space:nowrap">${escapeHTML(k)}: ${v}</span>`).join("");
+      const ocup = Object.keys(c.top_ocupaciones||{}).slice(0,2).map(escapeHTML).join(", ");
+      return `<div id="kmc-card-${c.cluster}" class="cluster-card" style="border:1px solid #e6e5e3;border-left:4px solid ${color};border-radius:8px;padding:12px;background:#fff;transition:box-shadow .15s">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <strong style="font-size:13px;color:#172033">Cluster ${c.cluster}</strong>
+          <span style="font-size:11px;color:#687386">n=${c.tamano} (${c.porcentaje}%)</span>
+        </div>
+        ${(function(){var f=fenotipoClinicoCluster(c);return '<div style="background:'+f.color+'14;border:1px solid '+f.color+'55;border-radius:6px;padding:7px 8px;margin-bottom:6px"><div style="font-size:11.5px;font-weight:800;color:'+f.color+';line-height:1.25">🩺 '+escapeHTML(f.nombre)+'</div><div style="font-size:9.5px;color:#687386;margin-top:2px">'+escapeHTML(f.icsd)+'</div><div style="font-size:10px;color:#354052;margin-top:4px">'+escapeHTML(f.criterio)+'</div><div style="font-size:10px;color:#354052;margin-top:3px"><strong>Manejo sugerido:</strong> '+escapeHTML(f.manejo)+'</div></div>';})()}<div style="font-size:11px;margin-bottom:6px">Perfil dominante: <strong style="color:${color}">${escapeHTML(c.trastorno_dominante)}</strong> · silueta ${c.silueta_media}</div>
+        <div style="margin-bottom:6px">${dist}</div>
+        ${perfil}
+        ${ocup ? `<div style="font-size:10px;color:#687386;margin-top:6px">Ocupaciones: ${ocup}</div>` : ""}
+      </div>`;
+    }).join("");
+
+    content.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:16px">
+        ${kpi("Algoritmo", r.algoritmo.split(" ")[0])}
+        ${kpi("k óptimo", r.k_optimo)}
+        ${kpi("Silueta prom.", r.silueta_promedio)}
+        ${kpi("Davies-Bouldin", km_met.davies_bouldin ?? "—")}
+        ${kpi("Calinski-Harabasz", km_met.calinski_harabasz ?? "—")}
+        ${kpi("Muestras", r.n_muestras)}
+      </div>
+      <p style="font-size:11px;color:#687386;margin-bottom:12px">El número de clusters se eligió con el <strong>${escapeHTML(r.criterio_k)}</strong> evaluando k = ${r.rango_k_evaluado[0]}..${r.rango_k_evaluado[r.rango_k_evaluado.length-1]}. Se usaron ${r.n_features} variables de salud/sueño.</p>
+      <hr style="border:0;border-top:1px solid #e8edf3;margin:12px 0">
+      <h3 style="font-size:14px;color:#172033;margin-bottom:8px">1. Elección de k — Codo y Silueta</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:8px">
+        <div><p style="font-size:11px;color:#687386;margin-bottom:4px">Método del Codo (inercia/WCSS)</p><div id="cl-codo"></div></div>
+        <div><p style="font-size:11px;color:#687386;margin-bottom:4px">Coeficiente de Silueta</p><div id="cl-silueta"></div></div>
+      </div>
+      <hr style="border:0;border-top:1px solid #e8edf3;margin:12px 0">
+      <h3 style="font-size:14px;color:#172033;margin-bottom:8px">2. Clusters sobre proyección PCA 2D</h3>
+      <div class="cluster-nav">
+        <button onclick="clusterNavGo(-1)">◀ Anterior</button>
+        <span class="cluster-nav-label" id="cluster-nav-label">Mostrando todos los clusters</span>
+        <button onclick="clusterNavGo(1)">Siguiente ▶</button>
+        <button onclick="clusterNavReset()">Ver todos</button>
+      </div>
+      <div id="cl-scatter"></div>
+      <hr style="border:0;border-top:1px solid #e8edf3;margin:12px 0">
+      <h3 style="font-size:14px;color:#172033;margin-bottom:8px">3. Caracterización de cada cluster</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px">${cards}</div>
+    `;
+    // dibujar graficos D3 (tras render del DOM)
+    LAST_CLUSTER_DATA = r;
+    clusterNavIndex = -1;
+    setTimeout(() => {
+      drawLineChart("cl-codo", r.curva_codo.k, r.curva_codo.inercia, "k", "Inercia", "#2783DE", r.k_optimo);
+      drawLineChart("cl-silueta", r.curva_silueta.k, r.curva_silueta.silueta, "k", "Silueta", "#46A171", r.k_optimo);
+      renderClusterNav();
+    }, 30);
+  } catch (e) {
+    content.innerHTML = `<div style="text-align:center;padding:30px;color:#c94c4c">${escapeHTML(e.message)}</div>`;
+  }
+}
+
+async function loadMLResults() {
+  const panel = document.getElementById("ml-panel");
+  const content = document.getElementById("ml-content");
+  panel.style.display = "block";
+  document.getElementById("ml-global-risk").innerHTML = '<div style="text-align:center;padding:10px;color:#687386;font-size:12px">Cargando riesgo global...</div>';
+  content.innerHTML = '<div style="text-align:center;padding:30px;color:#687386">Cargando resultados ML...</div>';
+  cargarRiesgoGlobal();
+  try {
+    const resp = await fetch("/api/ml/results");
+    if (!resp.ok) throw new Error("Ejecuta pipeline_ml.py primero");
+    const r = await resp.json();
+    const ev = r.evaluacion;
+    const sel = r.seleccion_variables;
+    const eda = r.eda;
+    const pre = r.preprocesamiento;
+
+    let cmHTML = "";
+    if (ev.matriz_confusion) {
+      const labels = ev.etiquetas_clases;
+      const cm = ev.matriz_confusion;
+      cmHTML = '<table style="border-collapse:collapse;margin:10px auto;font-size:12px">';
+      cmHTML += '<tr><td></td>';
+      labels.forEach(l => { cmHTML += `<th style="padding:6px 10px;border:1px solid #dce3ec;background:#eef2f6;font-size:11px">Pred<br>${l}</th>`; });
+      cmHTML += '</tr>';
+      labels.forEach((l, i) => {
+        cmHTML += `<tr><th style="padding:6px 10px;border:1px solid #dce3ec;background:#eef2f6;font-size:11px">Real<br>${l}</th>`;
+        cm[i].forEach((v, j) => {
+          const highlight = i === j ? 'background:#d4edda;font-weight:800' : '';
+          cmHTML += `<td style="padding:6px 10px;border:1px solid #dce3ec;text-align:center;${highlight}">${v}</td>`;
+        });
+        cmHTML += '</tr>';
+      });
+      cmHTML += '</table>';
+    }
+
+    content.innerHTML = `
+      <div style="margin-bottom:16px">
+        <h3 style="font-size:14px;color:#172033;margin-bottom:8px">1. EDA - Distribución de Clases</h3>
+        <p>Total: <strong>${eda.total_muestras}</strong> muestras</p>
+        <p>Desbalance: clase mayoritaria <strong>${eda.clase_mayoritaria}</strong> (${eda.conteo_clases[eda.clase_mayoritaria]}) vs minoritaria <strong>${eda.clase_minoritaria}</strong> (${eda.conteo_clases[eda.clase_minoritaria]}) — ratio <strong>${eda.desbalance_ratio}:1</strong></p>
+        <p style="margin-top:6px;font-size:11px;color:#687386">
+          SMOTEENN aplicado: ${pre.train_size} train + ${pre.test_size} test (80/20) → ${Object.values(pre.smoteenn_clases_resultantes).reduce((a,b)=>a+b,0)} muestras balanceadas
+        </p>
+      </div>
+      <hr style="border:0;border-top:1px solid #e8edf3;margin:12px 0">
+      <div style="margin-bottom:16px">
+        <h3 style="font-size:14px;color:#172033;margin-bottom:8px">2. Selección de Variables - Top 5</h3>
+        <p style="font-size:11px;color:#687386">Método: GradientBoostingRegressor</p>
+        <table style="border-collapse:collapse;margin:8px 0;font-size:12px;width:100%">
+          <tr><th style="padding:5px 8px;border:1px solid #dce3ec;background:#eef2f6;text-align:left">#</th><th style="padding:5px 8px;border:1px solid #dce3ec;background:#eef2f6;text-align:left">Feature</th><th style="padding:5px 8px;border:1px solid #dce3ec;background:#eef2f6;text-align:right">Importancia</th></tr>
+          ${sel.features.map(f => `<tr><td style="padding:5px 8px;border:1px solid #dce3ec">${f.posicion}</td><td style="padding:5px 8px;border:1px solid #dce3ec">${f.feature}</td><td style="padding:5px 8px;border:1px solid #dce3ec;text-align:right">${(f.importancia*100).toFixed(2)}%</td></tr>`).join("")}
+        </table>
+      </div>
+      <hr style="border:0;border-top:1px solid #e8edf3;margin:12px 0">
+      <div style="margin-bottom:16px">
+        <h3 style="font-size:14px;color:#172033;margin-bottom:8px">3. Evaluación - GradientBoostingClassifier</h3>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:10px 0">
+          <div style="background:#eef2f6;border-radius:6px;padding:10px;text-align:center"><div style="font-size:10px;color:#687386">Accuracy</div><div style="font-size:18px;font-weight:800;color:#172033">${(ev.accuracy*100).toFixed(1)}%</div></div>
+          <div style="background:#eef2f6;border-radius:6px;padding:10px;text-align:center"><div style="font-size:10px;color:#687386">Precision</div><div style="font-size:18px;font-weight:800;color:#172033">${(ev.precision*100).toFixed(1)}%</div></div>
+          <div style="background:#eef2f6;border-radius:6px;padding:10px;text-align:center"><div style="font-size:10px;color:#687386">Recall</div><div style="font-size:18px;font-weight:800;color:#172033">${(ev.recall*100).toFixed(1)}%</div></div>
+          <div style="background:#eef2f6;border-radius:6px;padding:10px;text-align:center"><div style="font-size:10px;color:#687386">F1-Score</div><div style="font-size:18px;font-weight:800;color:#172033">${(ev.f1_score*100).toFixed(1)}%</div></div>
+          <div style="background:#eef2f6;border-radius:6px;padding:10px;text-align:center"><div style="font-size:10px;color:#687386">AUC</div><div style="font-size:18px;font-weight:800;color:#172033">${ev.auc ? (ev.auc*100).toFixed(1)+'%' : 'N/A'}</div></div>
+        </div>
+        <p style="font-size:11px;color:#687386;margin-top:4px">Matriz de Confusión:</p>
+        ${cmHTML}
+      </div>
+      <hr style="border:0;border-top:1px solid #e8edf3;margin:12px 0">
+      <div style="margin-bottom:10px">
+        <h3 style="font-size:14px;color:#172033;margin-bottom:8px">4. Reporte por Clase</h3>
+        <table style="border-collapse:collapse;margin:8px 0;font-size:12px;width:100%">
+          <tr><th style="padding:5px 8px;border:1px solid #dce3ec;background:#eef2f6;text-align:left">Clase</th><th style="padding:5px 8px;border:1px solid #dce3ec;background:#eef2f6;text-align:right">Precisión</th><th style="padding:5px 8px;border:1px solid #dce3ec;background:#eef2f6;text-align:right">Recall</th><th style="padding:5px 8px;border:1px solid #dce3ec;background:#eef2f6;text-align:right">F1</th><th style="padding:5px 8px;border:1px solid #dce3ec;background:#eef2f6;text-align:right">Soporte</th></tr>
+          ${Object.entries(ev.reporte_clasificacion).filter(([k]) => !['accuracy','macro avg','weighted avg'].includes(k)).map(([cls, m]) => `
+            <tr>
+              <td style="padding:5px 8px;border:1px solid #dce3ec;font-weight:700">${cls}</td>
+              <td style="padding:5px 8px;border:1px solid #dce3ec;text-align:right">${(m.precision*100).toFixed(1)}%</td>
+              <td style="padding:5px 8px;border:1px solid #dce3ec;text-align:right">${(m.recall*100).toFixed(1)}%</td>
+              <td style="padding:5px 8px;border:1px solid #dce3ec;text-align:right">${(m['f1-score']*100).toFixed(1)}%</td>
+              <td style="padding:5px 8px;border:1px solid #dce3ec;text-align:right">${m.support}</td>
+            </tr>
+          `).join("")}
+          ${['macro avg','weighted avg'].map(avg => `
+            <tr style="background:#f8f9fb">
+              <td style="padding:5px 8px;border:1px solid #dce3ec;font-weight:700;font-style:italic">${avg}</td>
+              <td style="padding:5px 8px;border:1px solid #dce3ec;text-align:right">${(ev.reporte_clasificacion[avg].precision*100).toFixed(1)}%</td>
+              <td style="padding:5px 8px;border:1px solid #dce3ec;text-align:right">${(ev.reporte_clasificacion[avg].recall*100).toFixed(1)}%</td>
+              <td style="padding:5px 8px;border:1px solid #dce3ec;text-align:right">${(ev.reporte_clasificacion[avg]['f1-score']*100).toFixed(1)}%</td>
+              <td style="padding:5px 8px;border:1px solid #dce3ec;text-align:right">${ev.reporte_clasificacion[avg].support}</td>
+            </tr>
+          `).join("")}
+        </table>
+      </div>
+      <hr style="border:0;border-top:1px solid #e8edf3;margin:12px 0">
+      <div style="margin-bottom:6px">
+        <h3 style="font-size:14px;color:#172033;margin-bottom:8px">5. Gráficos</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div><p style="font-size:11px;color:#687386;margin-bottom:4px">Distribución de clases</p><img src="/static/distribucion_clases.png" style="width:100%;border:1px solid #dce3ec;border-radius:4px"></div>
+          <div><p style="font-size:11px;color:#687386;margin-bottom:4px">Feature Importance</p><img src="/static/feature_importance.png" style="width:100%;border:1px solid #dce3ec;border-radius:4px"></div>
+          <div><p style="font-size:11px;color:#687386;margin-bottom:4px">Matriz de Confusión</p><img src="/static/matriz_confusion.png" style="width:100%;border:1px solid #dce3ec;border-radius:4px"></div>
+        </div>
+      </div>
+    `;
+  } catch(e) {
+    content.innerHTML = `<div style="text-align:center;padding:30px;color:#c00"><h3>Error</h3><p>${escapeHTML(e.message)}</p><p style="margin-top:10px;font-size:12px;color:#687386">Ejecuta <code>python pipeline_ml.py</code> en la terminal primero.</p></div>`;
+  }
+}
+
+/* ── Evaluador nuevo paciente + historial de sesion ── */
+let EVAL_HISTORY = [];
+function abrirEvaluador() {
+  document.getElementById("eval-panel").style.display = "block";
+  document.getElementById("eval-result").innerHTML = '';
+  renderEvalHistory();
+}
+function toggleEvalHistory() {
+  const list = document.getElementById("eval-history-list");
+  const caret = document.getElementById("eval-history-caret");
+  const open = list.style.display !== "none";
+  list.style.display = open ? "none" : "block";
+  caret.textContent = open ? "▾" : "▴";
+}
+function limpiarEvalHistory() {
+  EVAL_HISTORY = [];
+  renderEvalHistory();
+}
+function renderEvalHistory() {
+  const countEl = document.getElementById("eval-history-count");
+  const list = document.getElementById("eval-history-list");
+  if (!countEl || !list) return;
+  countEl.textContent = EVAL_HISTORY.length;
+  if (EVAL_HISTORY.length === 0) {
+    list.innerHTML = '<div style="font-size:11px;color:#8a95a5;padding:6px 0">Aún no hay evaluaciones en esta sesión.</div>';
+    return;
+  }
+  const ICONO_PRED = {apnea:'🫁', insomnio:'😴', riesgo:'⚠️', ninguno:'✅'};
+  list.innerHTML = EVAL_HISTORY.map(h => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:1px solid #f0f2f5;font-size:10.5px">
+      <span style="color:#9aa5b1;white-space:nowrap">${h.ts}</span>
+      <span class="pred-chip ${h.predClass}" style="padding:2px 7px;font-size:10px;margin:0;white-space:nowrap">${ICONO_PRED[h.predClass]||''} ${escapeHTML(h.prediccion)}</span>
+      <span style="color:#4b5563;flex:1;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Sueño ${h.payload.duracion_sueno_horas}h · Estrés ${h.payload.nivel_estres} · Conf. ${escapeHTML(String(h.confianza))}</span>
+    </div>
+  `).join("");
+}
+
+async function ejecutarEvaluacion() {
+  const btn = document.querySelector('#eval-panel button[onclick="ejecutarEvaluacion()"]');
+  btn.textContent = '⏳ Analizando...';
+  btn.disabled = true;
+  const payload = {
+    categoria_imc: document.getElementById("ef-imc").value,
+    presion_arterial: document.getElementById("ef-presion").value,
+    duracion_sueno_horas: parseFloat(document.getElementById("ef-sueno").value),
+    nivel_estres: parseInt(document.getElementById("ef-estres").value),
+    frecuencia_cardiaca: parseInt(document.getElementById("ef-fc").value),
+    nivel_actividad_fisica: parseInt(document.getElementById("ef-actividad").value),
+    calidad_sueno: parseInt(document.getElementById("ef-calidad").value),
+  };
+  try {
+    const resp = await fetch("/api/predict", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+    const data = await resp.json();
+    const predClass = data.prediccion.toLowerCase().includes('apnea') ? 'apnea'
+      : data.prediccion.toLowerCase().includes('insomnio') ? 'insomnio'
+      : data.prediccion.toLowerCase().includes('riesgo') ? 'riesgo' : 'ninguno';
+    const ICONO_PRED = {apnea:'🫁', insomnio:'😴', riesgo:'⚠️', ninguno:'✅'};
+    document.getElementById("eval-result").innerHTML = `
+      <div class="eval-result">
+        <div class="pred-chip ${predClass}">${ICONO_PRED[predClass]} ${escapeHTML(data.prediccion)} — Confianza: ${escapeHTML(data.confianza)}</div>
+        <p style="font-size:11.5px;color:#4b5563;margin-bottom:10px">${escapeHTML(data.explicacion)}</p>
+        <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#687386;margin-bottom:6px">🔔 Alertas Clínicas Detectadas</div>
+        ${renderAlertas(data.alertas)}
+      </div>`;
+    EVAL_HISTORY.unshift({
+      ts: new Date().toLocaleTimeString("es-PE", {hour:"2-digit", minute:"2-digit", second:"2-digit"}),
+      payload, prediccion: data.prediccion, confianza: data.confianza, predClass
+    });
+    renderEvalHistory();
+  } catch(e) {
+    document.getElementById("eval-result").innerHTML = `<div style="color:#c00;font-size:12px;margin-top:10px">Error: ${escapeHTML(e.message)}</div>`;
+  } finally {
+    btn.textContent = '🔍 Analizar Riesgo Clínico';
+    btn.disabled = false;
+  }
+}
+
+async function init() {
+  // Registrar eventos de modales
+  document.getElementById("btn-ml-close").onclick = () => {
+    document.getElementById("ml-panel").style.display = "none";
+  };
+  document.getElementById("ml-panel").onclick = (e) => {
+    if (e.target === e.currentTarget) document.getElementById("ml-panel").style.display = "none";
+  };
+  document.getElementById("btn-cluster-close").onclick = () => {
+    document.getElementById("cluster-panel").style.display = "none";
+  };
+  document.getElementById("cluster-panel").onclick = (e) => {
+    if (e.target === e.currentTarget) document.getElementById("cluster-panel").style.display = "none";
+  };
+  document.getElementById("btn-dbscan-close").onclick = () => {
+    document.getElementById("dbscan-panel").style.display = "none";
+  };
+  document.getElementById("dbscan-panel").onclick = (e) => {
+    if (e.target === e.currentTarget) document.getElementById("dbscan-panel").style.display = "none";
+  };
+  document.getElementById("btn-eval-close").onclick = () => {
+    document.getElementById("eval-panel").style.display = "none";
+  };
+  document.getElementById("eval-panel").onclick = (e) => {
+    if (e.target === e.currentTarget) document.getElementById("eval-panel").style.display = "none";
+  };
+
+  try {
+    const resp = await fetch("/api/data");
+    if (!resp.ok) {
+      let detalle = "Error " + resp.status;
+      try {
+        const err = await resp.json();
+        if (err && err.error) {
+          detalle = err.error;
+          if (err.archivos_faltantes && err.archivos_faltantes.length) detalle += " (" + err.archivos_faltantes.join(", ") + ")";
+          if (err.solucion) detalle += " \u2014 " + err.solucion;
+        }
+      } catch (e) {}
+      throw new Error(detalle);
+    }
+    DATA = await resp.json();
+    readFilterState();
+    updateDataSummary();
+    populateSelects();
+    drawLegend();
+    drawFixedLegend();
+    initCohortSelectors();
+    document.getElementById("select-tech").onchange = () => {
+      drawScatter();
+    };
+    document.getElementById("select-bar-tech").onchange = drawBarChart;
+    window.addEventListener("resize", redrawAll);
+    redrawAll();
+  } catch(e) {
+    document.getElementById("data-summary").textContent = "Error al cargar datos";
+    console.error("Error cargando datos:", e.message);
+    document.body.innerHTML = `<div style="padding:40px;text-align:center;color:#c00"><h2>Error al cargar datos</h2><p>${escapeHTML(e.message)}</p><p style="margin-top:12px;font-size:13px;color:#687386">Asegúrate de que el servidor Flask esté corriendo en http://localhost:5000</p></div>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>

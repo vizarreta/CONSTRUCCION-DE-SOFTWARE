@@ -1,0 +1,12 @@
+# Dependencias con versiones fijadas para reproducibilidad.
+# Combinacion estable y mutuamente compatible, probada en Python 3.9-3.12.
+# Instalar con:  pip install -r requirements.txt
+# (recomendado dentro de un entorno virtual: python -m venv .venv)
+
+Flask==3.0.3
+flask-cors==4.0.1
+numpy==1.26.4
+pandas==2.2.2
+scikit-learn==1.5.1
+umap-learn==0.5.6
+matplotlib==3.9.2
